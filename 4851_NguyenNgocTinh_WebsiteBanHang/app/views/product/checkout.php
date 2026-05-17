@@ -1,0 +1,124 @@
+<?php include 'app/views/shares/header.php'; ?>
+
+<style>
+    .form-control-glass {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        color: var(--text-main);
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control-glass:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
+        color: var(--text-main);
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+
+    .order-summary-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+</style>
+
+<div class="row mb-3">
+    <div class="col-md-8 mx-auto">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="<?php echo BASE_URL; ?>/Product/cart" class="text-muted text-decoration-none">Giỏ hàng</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">Thanh toán</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="glass-card">
+            <h2 class="text-gradient fw-bold mb-4"><i class="fa-solid fa-credit-card me-2 text-primary"></i>Thông tin thanh toán</h2>
+
+            <?php if (isset($_SESSION['error_msg'])): ?>
+                <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger rounded-3 p-3 mb-4">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i><?php echo $_SESSION['error_msg']; unset($_SESSION['error_msg']); ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="order-summary-card">
+                        <h5 class="text-white mb-3 fw-bold"><i class="fa-solid fa-basket-shopping me-2 text-success"></i>Tóm tắt đơn hàng</h5>
+                        <?php if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])): ?>
+                            <?php 
+                            $total = 0;
+                            foreach ($_SESSION['cart'] as $item): 
+                                $subtotal = $item['price'] * $item['quantity'];
+                                $total += $subtotal;
+                            ?>
+                                <div class="d-flex justify-content-between align-items-center mb-2 py-1 border-bottom border-secondary border-opacity-10">
+                                    <div class="text-muted"><?php echo htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8'); ?> <span class="badge-premium ms-2">x<?php echo $item['quantity']; ?></span></div>
+                                    <div class="text-white fw-medium"><?php echo number_format($subtotal, 0, ',', '.'); ?> VND</div>
+                                </div>
+                            <?php endforeach; ?>
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2">
+                                <h6 class="text-white fw-bold mb-0">Tổng cộng:</h6>
+                                <h5 class="text-success fw-bold mb-0" style="color: #30d158 !important;"><?php echo number_format($total, 0, ',', '.'); ?> VND</h5>
+                            </div>
+                        <?php else: ?>
+                            <p class="text-muted mb-0">Không có sản phẩm nào trong giỏ hàng.</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST" action="<?php echo BASE_URL; ?>/Product/processCheckout">
+                <div class="mb-4">
+                    <label for="name" class="form-label">Họ và tên người nhận:</label>
+                    <div class="input-group">
+                        <span class="input-group-text form-control-glass border-end-0" style="background: rgba(255,255,255,0.02);"><i class="fa-solid fa-user text-muted"></i></span>
+                        <input type="text" id="name" name="name" class="form-control form-control-glass border-start-0 ps-0" placeholder="Ví dụ: Nguyễn Văn A" required>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="phone" class="form-label">Số điện thoại liên hệ:</label>
+                    <div class="input-group">
+                        <span class="input-group-text form-control-glass border-end-0" style="background: rgba(255,255,255,0.02);"><i class="fa-solid fa-phone text-muted"></i></span>
+                        <input type="text" id="phone" name="phone" class="form-control form-control-glass border-start-0 ps-0" placeholder="Ví dụ: 0912345678" required>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="address" class="form-label">Địa chỉ giao hàng:</label>
+                    <div class="input-group">
+                        <span class="input-group-text form-control-glass border-end-0 align-items-start pt-3" style="background: rgba(255,255,255,0.02);"><i class="fa-solid fa-location-dot text-muted"></i></span>
+                        <textarea id="address" name="address" class="form-control form-control-glass border-start-0 ps-0" rows="3" placeholder="Nhập số nhà, tên đường, phường/xã, quận/huyện, thành phố..." required></textarea>
+                    </div>
+                </div>
+
+                <hr class="my-4" style="border-color: var(--glass-border);">
+
+                <div class="d-flex gap-3 justify-content-between align-items-center">
+                    <a href="<?php echo BASE_URL; ?>/Product/cart" class="btn btn-glass-secondary">
+                        <i class="fa-solid fa-arrow-left me-2"></i>Quay lại giỏ hàng
+                    </a>
+                    <button type="submit" class="btn btn-premium px-5" <?php echo (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) ? 'disabled' : ''; ?>>
+                        <i class="fa-solid fa-check me-2"></i>Xác nhận đặt hàng
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<?php include 'app/views/shares/footer.php'; ?>
