@@ -71,6 +71,8 @@ class AccountController {
         unset($_SESSION['username']);
         unset($_SESSION['user_role']);
         unset($_SESSION['user_fullname']);
+        unset($_SESSION['cart']);
+        unset($_SESSION['coupon']);
         $_SESSION['success_msg'] = "Bạn đã đăng xuất thành công!";
         header('Location: ' . BASE_URL . '/product');
         exit();
@@ -89,11 +91,15 @@ class AccountController {
 
         $user = $this->accountModel->getAccountByUsername($username);
         if ($user && password_verify($password, $user->password)) {
+            // Clean up session cart to isolate user carts
+            unset($_SESSION['cart']);
+            unset($_SESSION['coupon']);
+
             $_SESSION['username'] = $user->username;
             $_SESSION['user_role'] = $user->role;
             $_SESSION['user_fullname'] = $user->fullname;
             $_SESSION['success_msg'] = "Đăng nhập thành công! Chào mừng " . htmlspecialchars($user->fullname, ENT_QUOTES, 'UTF-8');
-            header('Location: ' . BASE_URL . '/Product');
+            header('Location: ' . BASE_URL . '/');
             exit();
         } else {
             $_SESSION['error_msg'] = "Tên đăng nhập hoặc mật khẩu không đúng!";
@@ -113,6 +119,10 @@ class AccountController {
 
         $user = $this->accountModel->getAccountByUsername($username);
         if ($user && password_verify($password, $user->password)) {
+            // Clean up session cart to isolate user carts
+            unset($_SESSION['cart']);
+            unset($_SESSION['coupon']);
+
             // Also set session for traditional web pages
             $_SESSION['username'] = $user->username;
             $_SESSION['user_role'] = $user->role;
