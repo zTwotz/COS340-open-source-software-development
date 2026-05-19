@@ -2,6 +2,7 @@
 require_once('app/config/database.php');
 require_once('app/models/ProductModel.php');
 require_once('app/models/CategoryModel.php');
+require_once('app/helpers/SessionHelper.php');
 
 class ProductController
 {
@@ -16,9 +17,24 @@ class ProductController
         $this->categoryModel = new CategoryModel($this->db);
     }
 
+    // Trang chủ sản phẩm — PUBLIC (ai cũng xem được)
     public function index()
     {
-        $products = $this->productModel->getProducts();
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $limit = 8;
+        $keyword = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+        if (!empty($keyword)) {
+            $products = $this->productModel->searchProducts($keyword, $page, $limit);
+            $totalProducts = $this->productModel->getTotalSearchProducts($keyword);
+        } else {
+            $products = $this->productModel->getProductsPaginated($page, $limit);
+            $totalProducts = $this->productModel->getTotalProducts();
+        }
+
+        $totalPages = ceil($totalProducts / $limit);
+        $categories = $this->categoryModel->getCategories();
+
         include 'app/views/product/list.php';
     }
 
@@ -35,14 +51,26 @@ class ProductController
         }
     }
 
+    // Thêm sản phẩm — YÊU CẦU ĐĂNG NHẬP
     public function add()
     {
+        if (!SessionHelper::isLoggedIn()) {
+            $_SESSION['error_msg'] = "Vui lòng đăng nhập để thêm sản phẩm.";
+            header('Location: ' . BASE_URL . '/account/login');
+            exit();
+        }
         $categories = $this->categoryModel->getCategories();
         include_once 'app/views/product/add.php';
     }
 
     public function save()
     {
+        if (!SessionHelper::isLoggedIn()) {
+            $_SESSION['error_msg'] = "Vui lòng đăng nhập để thực hiện.";
+            header('Location: ' . BASE_URL . '/account/login');
+            exit();
+        }
+
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $name = trim($_POST['name'] ?? '');
             $description = trim($_POST['description'] ?? '');
@@ -51,20 +79,8 @@ class ProductController
             $image = "";
 
             // Check if file is uploaded
+            // Image upload validation (controller-specific, not duplicated in model)
             $errors = [];
-            if (empty($name)) {
-                $errors['name'] = 'Tên sản phẩm không được để trống';
-            }
-            if (empty($description)) {
-                $errors['description'] = 'Mô tả không được để trống';
-            }
-            if (!is_numeric($price) || $price < 0) {
-                $errors['price'] = 'Giá sản phẩm không hợp lệ';
-            }
-            if (empty($category_id)) {
-                $errors['category_id'] = 'Vui lòng chọn danh mục';
-            }
-
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
                 try {
                     $image = $this->uploadImage($_FILES['image']);
@@ -93,8 +109,15 @@ class ProductController
         }
     }
 
+    // Sửa sản phẩm — YÊU CẦU ĐĂNG NHẬP
     public function edit($id)
     {
+        if (!SessionHelper::isLoggedIn()) {
+            $_SESSION['error_msg'] = "Vui lòng đăng nhập để sửa sản phẩm.";
+            header('Location: ' . BASE_URL . '/account/login');
+            exit();
+        }
+
         $product = $this->productModel->getProductById($id);
         $categories = $this->categoryModel->getCategories();
 
@@ -109,6 +132,12 @@ class ProductController
 
     public function update()
     {
+        if (!SessionHelper::isLoggedIn()) {
+            $_SESSION['error_msg'] = "Vui lòng đăng nhập để thực hiện.";
+            header('Location: ' . BASE_URL . '/account/login');
+            exit();
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = $_POST['id'];
             $name = trim($_POST['name'] ?? '');
@@ -166,8 +195,15 @@ class ProductController
         }
     }
 
+    // Xóa sản phẩm — YÊU CẦU ĐĂNG NHẬP
     public function delete($id)
     {
+        if (!SessionHelper::isLoggedIn()) {
+            $_SESSION['error_msg'] = "Vui lòng đăng nhập để thực hiện.";
+            header('Location: ' . BASE_URL . '/account/login');
+            exit();
+        }
+
         if ($this->productModel->deleteProduct($id)) {
             $_SESSION['success_msg'] = "Đã xóa sản phẩm thành công!";
         } else {

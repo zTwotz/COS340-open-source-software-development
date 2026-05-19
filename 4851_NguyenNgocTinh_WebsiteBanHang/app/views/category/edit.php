@@ -1,5 +1,16 @@
 <?php include 'app/views/shares/header.php'; ?>
 
+<?php
+// Defensive guard: Ensure $category is always a valid object to prevent null/void crashes
+if (!isset($category) || !is_object($category)) {
+    $category = (object)[
+        'id' => '',
+        'name' => '',
+        'description' => ''
+    ];
+}
+?>
+
 <style>
     .form-control-glass {
         background: rgba(255, 255, 255, 0.05);

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NTECH STORE - Quản Lý Bán Hàng</title>
+    <meta name="description" content="NTECH STORE - Cửa hàng công nghệ hàng đầu. Sản phẩm chất lượng, giá tốt nhất.">
     <!-- Google Font Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 CSS -->
@@ -412,6 +413,37 @@
         [data-theme="light"] .order-summary-card {
             background: rgba(0, 0, 0, 0.02) !important;
         }
+
+        /* User badge in nav */
+        .user-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 980px;
+            padding: 4px 12px 4px 8px;
+            font-size: 12px;
+            color: var(--text-main);
+        }
+
+        .user-badge .user-avatar {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+        }
+
+        [data-theme="light"] .user-badge {
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
     </style>
 </head>
 <body>
@@ -434,12 +466,18 @@
             $cart_count += $item['quantity'];
         }
     }
+
+    // Check login state from session
+    $isLoggedIn = SessionHelper::isLoggedIn();
+    $currentUsername = $_SESSION['username'] ?? '';
+    $currentFullname = $_SESSION['user_fullname'] ?? $currentUsername;
+    $currentRole = $_SESSION['user_role'] ?? 'user';
     ?>
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="<?php echo BASE_URL; ?>">
+            <a class="navbar-brand" href="<?php echo BASE_URL; ?>/Product">
                 <i class="fa-solid fa-laptop-code me-2 text-primary"></i>NTECH STORE
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -448,64 +486,44 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link <?php echo is_active('/Product') && !is_active('/Product/add') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/Product">
+                        <a class="nav-link <?php echo is_active('/Product') && !is_active('/Product/add') && !is_active('/Product/cart') && !is_active('/Product/checkout') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/Product">
                             <i class="fa-solid fa-boxes-stacked me-1"></i>Sản phẩm
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?php echo is_active('/Product/add') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/Product/add">
-                            <i class="fa-solid fa-plus me-1"></i>Thêm sản phẩm
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?php echo is_active('/Category') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/Category/list">
-                            <i class="fa-solid fa-tags me-1"></i>Danh mục
-                        </a>
-                    </li>
+                    <?php if ($isLoggedIn): ?>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo is_active('/Product/add') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/Product/add">
+                                <i class="fa-solid fa-plus me-1"></i>Thêm sản phẩm
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo is_active('/Category') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/Category/list">
+                                <i class="fa-solid fa-tags me-1"></i>Danh mục
+                            </a>
+                        </li>
+                    <?php endif; ?>
                 </ul>
-                <div class="d-flex align-items-center">
-                    <span id="nav-welcome" class="nav-link text-white me-3" style="display: none;">Xin chào!</span>
-                    <a id="nav-logout" href="#" onclick="logout(); return false;" class="btn btn-outline-light border-0 nav-link me-3 p-2" style="display: none;">Đăng xuất</a>
-                    <a id="nav-login" href="<?php echo BASE_URL; ?>/account/login" class="btn btn-outline-light border-0 nav-link me-3 p-2" style="display: none;">Đăng nhập</a>
+                <div class="d-flex align-items-center gap-2">
+                    <?php if ($isLoggedIn): ?>
+                        <div class="user-badge">
+                            <div class="user-avatar">
+                                <?php echo strtoupper(substr($currentUsername, 0, 1)); ?>
+                            </div>
+                            <span><?php echo htmlspecialchars($currentFullname, ENT_QUOTES, 'UTF-8'); ?></span>
+                            <?php if ($currentRole === 'admin'): ?>
+                                <span class="badge bg-warning text-dark" style="font-size: 9px; padding: 2px 6px; border-radius: 4px;">Admin</span>
+                            <?php endif; ?>
+                        </div>
+                        <a href="<?php echo BASE_URL; ?>/account/logout" class="btn btn-outline-light border-0 nav-link p-2" title="Đăng xuất">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    <?php else: ?>
+                        <a href="<?php echo BASE_URL; ?>/account/login" class="btn btn-premium btn-sm" style="font-size: 12px;">
+                            <i class="fa-solid fa-user me-1"></i>Đăng nhập
+                        </a>
+                    <?php endif; ?>
 
-                    <script>
-                    function logout() {
-                        localStorage.removeItem('jwtToken');
-                        location.href = '<?php echo BASE_URL; ?>/account/login';
-                    }
-
-                    document.addEventListener("DOMContentLoaded", function() {
-                        const token = localStorage.getItem('jwtToken');
-                        const navLogin = document.getElementById('nav-login');
-                        const navLogout = document.getElementById('nav-logout');
-                        const navWelcome = document.getElementById('nav-welcome');
-
-                        if (token) {
-                            if (navLogin) navLogin.style.display = 'none';
-                            if (navLogout) navLogout.style.display = 'block';
-                            if (navWelcome) {
-                                try {
-                                    const base64Url = token.split('.')[1];
-                                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                                    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-                                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                                    }).join(''));
-                                    const payload = JSON.parse(jsonPayload);
-                                    navWelcome.textContent = 'Xin chào, ' + (payload.data.username || 'User');
-                                } catch(e) {
-                                    navWelcome.textContent = 'Xin chào!';
-                                }
-                                navWelcome.style.display = 'block';
-                            }
-                        } else {
-                            if (navLogin) navLogin.style.display = 'block';
-                            if (navLogout) navLogout.style.display = 'none';
-                            if (navWelcome) navWelcome.style.display = 'none';
-                        }
-                    });
-                    </script>
-
-                    <button id="theme-toggle" class="btn btn-outline-light border-0 text-muted nav-link me-3 p-0" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" aria-label="Toggle theme" title="Chuyển chế độ sáng/tối">
+                    <button id="theme-toggle" class="btn btn-outline-light border-0 text-muted nav-link p-0" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" aria-label="Toggle theme" title="Chuyển chế độ sáng/tối">
                         <i class="fa-solid fa-moon fs-5" id="theme-icon"></i>
                     </button>
                     <a href="<?php echo BASE_URL; ?>/Product/cart" class="btn btn-outline-light border-0 position-relative text-muted nav-link <?php echo is_active('/Product/cart') ? 'active' : ''; ?> p-0" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">

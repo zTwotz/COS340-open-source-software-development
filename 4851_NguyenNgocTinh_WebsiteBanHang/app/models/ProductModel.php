@@ -21,6 +21,87 @@ class ProductModel
         return $result;
     }
 
+    // Lấy sản phẩm với phân trang
+    public function getProductsPaginated($page = 1, $limit = 8)
+    {
+        $offset = ($page - 1) * $limit;
+        $query = "SELECT p.id, p.name, p.description, p.price, p.image, p.category_id, c.name as category_name
+                  FROM " . $this->table_name . " p
+                  LEFT JOIN category c ON p.category_id = c.id
+                  ORDER BY p.id DESC
+                  LIMIT :limit OFFSET :offset";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    // Đếm tổng số sản phẩm
+    public function getTotalProducts()
+    {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table_name;
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_OBJ);
+        return $row->total;
+    }
+
+    // Tìm kiếm sản phẩm theo từ khóa
+    public function searchProducts($keyword, $page = 1, $limit = 8)
+    {
+        $offset = ($page - 1) * $limit;
+        $searchTerm = '%' . $keyword . '%';
+        $query = "SELECT p.id, p.name, p.description, p.price, p.image, p.category_id, c.name as category_name
+                  FROM " . $this->table_name . " p
+                  LEFT JOIN category c ON p.category_id = c.id
+                  WHERE p.name LIKE :keyword OR p.description LIKE :keyword2 OR c.name LIKE :keyword3
+                  ORDER BY p.id DESC
+                  LIMIT :limit OFFSET :offset";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':keyword', $searchTerm);
+        $stmt->bindParam(':keyword2', $searchTerm);
+        $stmt->bindParam(':keyword3', $searchTerm);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    // Đếm tổng số sản phẩm tìm kiếm
+    public function getTotalSearchProducts($keyword)
+    {
+        $searchTerm = '%' . $keyword . '%';
+        $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " p
+                  LEFT JOIN category c ON p.category_id = c.id
+                  WHERE p.name LIKE :keyword OR p.description LIKE :keyword2 OR c.name LIKE :keyword3";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':keyword', $searchTerm);
+        $stmt->bindParam(':keyword2', $searchTerm);
+        $stmt->bindParam(':keyword3', $searchTerm);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_OBJ);
+        return $row->total;
+    }
+
+    // Lấy sản phẩm theo danh mục
+    public function getProductsByCategory($category_id, $page = 1, $limit = 8)
+    {
+        $offset = ($page - 1) * $limit;
+        $query = "SELECT p.id, p.name, p.description, p.price, p.image, p.category_id, c.name as category_name
+                  FROM " . $this->table_name . " p
+                  LEFT JOIN category c ON p.category_id = c.id
+                  WHERE p.category_id = :category_id
+                  ORDER BY p.id DESC
+                  LIMIT :limit OFFSET :offset";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':category_id', $category_id, PDO::PARAM_INT);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
     public function getProductById($id)
     {
         $query = "SELECT p.id, p.name, p.description, p.price, p.image, p.category_id, c.name as category_name

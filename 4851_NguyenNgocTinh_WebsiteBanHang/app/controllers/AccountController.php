@@ -56,6 +56,7 @@ class AccountController {
                 $password_hashed = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
                 $result = $this->accountModel->save($username, $fullName, $password_hashed);
                 if($result){
+                    $_SESSION['success_msg'] = "Đăng ký tài khoản thành công! Vui lòng đăng nhập.";
                     header('Location: ' . BASE_URL . '/account/login');
                     exit();
                 } else {
@@ -69,10 +70,39 @@ class AccountController {
     function logout(){
         unset($_SESSION['username']);
         unset($_SESSION['user_role']);
+        unset($_SESSION['user_fullname']);
+        $_SESSION['success_msg'] = "Bạn đã đăng xuất thành công!";
         header('Location: ' . BASE_URL . '/product');
         exit();
     }
 
+    // Traditional form POST login fallback (Bài 4) — for non-AJAX requests
+    public function processLogin()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/account/login');
+            exit();
+        }
+
+        $username = trim($_POST['username'] ?? '');
+        $password = $_POST['password'] ?? '';
+
+        $user = $this->accountModel->getAccountByUsername($username);
+        if ($user && password_verify($password, $user->password)) {
+            $_SESSION['username'] = $user->username;
+            $_SESSION['user_role'] = $user->role;
+            $_SESSION['user_fullname'] = $user->fullname;
+            $_SESSION['success_msg'] = "Đăng nhập thành công! Chào mừng " . htmlspecialchars($user->fullname, ENT_QUOTES, 'UTF-8');
+            header('Location: ' . BASE_URL . '/Product');
+            exit();
+        } else {
+            $_SESSION['error_msg'] = "Tên đăng nhập hoặc mật khẩu không đúng!";
+            header('Location: ' . BASE_URL . '/account/login');
+            exit();
+        }
+    }
+
+    // JWT-based API login (Bài 6) — returns JSON token
     public function checkLogin()
     {
         header('Content-Type: application/json');
@@ -83,7 +113,16 @@ class AccountController {
 
         $user = $this->accountModel->getAccountByUsername($username);
         if ($user && password_verify($password, $user->password)) {
-            $token = $this->jwtHandler->encode(['id' => $user->id, 'username' => $user->username]);
+            // Also set session for traditional web pages
+            $_SESSION['username'] = $user->username;
+            $_SESSION['user_role'] = $user->role;
+            $_SESSION['user_fullname'] = $user->fullname;
+
+            $token = $this->jwtHandler->encode([
+                'id' => $user->id, 
+                'username' => $user->username,
+                'role' => $user->role
+            ]);
 
             echo json_encode(['token' => $token]);
         } else {

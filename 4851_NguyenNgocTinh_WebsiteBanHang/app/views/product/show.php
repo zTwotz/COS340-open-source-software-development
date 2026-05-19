@@ -17,6 +17,11 @@
         width: 100%;
         max-height: 450px;
         object-fit: contain;
+        transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .detail-img:hover {
+        transform: scale(1.05);
     }
 
     .detail-placeholder {
@@ -41,11 +46,15 @@
     }
 
     .detail-desc {
-        color: rgba(255, 255, 255, 0.65);
+        color: var(--text-muted);
         font-size: 1rem;
         line-height: 1.6;
         margin-bottom: 2rem;
         white-space: pre-line;
+    }
+
+    [data-theme="light"] .detail-desc {
+        color: rgba(29, 29, 31, 0.65);
     }
 </style>
 
@@ -54,7 +63,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="<?php echo BASE_URL; ?>/Product" class="text-muted text-decoration-none">Sản phẩm</a></li>
-                <li class="breadcrumb-item active text-white" aria-current="page"><?php echo htmlspecialchars($product->name); ?></li>
+                <li class="breadcrumb-item active" style="color: var(--text-main);" aria-current="page"><?php echo htmlspecialchars($product->name); ?></li>
             </ol>
         </nav>
     </div>
@@ -90,7 +99,7 @@
                 
                 <hr style="border-color: var(--glass-border);">
                 
-                <h5 class="fw-semibold text-white mb-2">Mô tả chi tiết:</h5>
+                <h5 class="fw-semibold mb-2" style="color: var(--text-main);">Mô tả chi tiết:</h5>
                 <p class="detail-desc">
                     <?php echo htmlspecialchars($product->description, ENT_QUOTES, 'UTF-8'); ?>
                 </p>
@@ -99,12 +108,14 @@
                     <a href="<?php echo BASE_URL; ?>/Product/addToCart/<?php echo $product->id; ?>" class="btn btn-premium px-4 py-2">
                         <i class="fa-solid fa-cart-shopping me-2"></i>Thêm vào giỏ hàng
                     </a>
-                    <a href="<?php echo BASE_URL; ?>/Product/edit/<?php echo $product->id; ?>" class="btn btn-premium-warning px-4 py-2">
-                        <i class="fa-solid fa-pen-to-square me-2"></i>Chỉnh sửa sản phẩm
-                    </a>
-                    <button onclick="confirmDelete('<?php echo $product->id; ?>', '<?php echo htmlspecialchars($product->name, ENT_QUOTES, 'UTF-8'); ?>')" class="btn btn-premium-danger px-4 py-2">
-                        <i class="fa-solid fa-trash-can me-2"></i>Xóa sản phẩm
-                    </button>
+                    <?php if (SessionHelper::isLoggedIn()): ?>
+                        <a href="<?php echo BASE_URL; ?>/Product/edit/<?php echo $product->id; ?>" class="btn btn-premium-warning px-4 py-2">
+                            <i class="fa-solid fa-pen-to-square me-2"></i>Chỉnh sửa
+                        </a>
+                        <button onclick="confirmDelete('<?php echo $product->id; ?>', '<?php echo htmlspecialchars($product->name, ENT_QUOTES, 'UTF-8'); ?>')" class="btn btn-premium-danger px-4 py-2">
+                            <i class="fa-solid fa-trash-can me-2"></i>Xóa
+                        </button>
+                    <?php endif; ?>
                     <a href="<?php echo BASE_URL; ?>/Product" class="btn btn-glass-secondary px-4 py-2">
                         <i class="fa-solid fa-arrow-left me-2"></i>Quay lại
                     </a>
@@ -116,13 +127,14 @@
 
 <script>
 function confirmDelete(id, name) {
+    const currentTheme = localStorage.getItem('theme') || 'dark';
     Swal.fire({
         title: 'Bạn có chắc chắn?',
         text: "Sản phẩm '" + name + "' sẽ bị xóa vĩnh viễn khỏi hệ thống!",
         icon: 'warning',
         showCancelButton: true,
-        background: '#1d1d1f',
-        color: '#f5f5f7',
+        background: currentTheme === 'light' ? '#ffffff' : '#1d1d1f',
+        color: currentTheme === 'light' ? '#1d1d1f' : '#f5f5f7',
         confirmButtonColor: '#ff453a',
         cancelButtonColor: '#0071e3',
         confirmButtonText: '<i class="fa-solid fa-trash me-2"></i>Có, hãy xóa!',

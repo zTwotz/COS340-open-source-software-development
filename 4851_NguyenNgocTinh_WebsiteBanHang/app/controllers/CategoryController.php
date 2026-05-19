@@ -1,6 +1,7 @@
 <?php
 require_once('app/config/database.php');
 require_once('app/models/CategoryModel.php');
+require_once('app/helpers/SessionHelper.php');
 
 class CategoryController
 {
@@ -11,6 +12,13 @@ class CategoryController
     {
         $this->db = (new Database())->getConnection();
         $this->categoryModel = new CategoryModel($this->db);
+
+        // Bảo vệ toàn bộ CategoryController — chỉ user đã đăng nhập mới truy cập
+        if (!SessionHelper::isLoggedIn()) {
+            $_SESSION['error_msg'] = "Vui lòng đăng nhập để quản lý danh mục.";
+            header('Location: ' . BASE_URL . '/account/login');
+            exit();
+        }
     }
 
     public function index()
@@ -48,11 +56,17 @@ class CategoryController
         }
     }
 
-    public function edit($id)
+    public function edit($id = null)
     {
+        if (empty($id)) {
+            $_SESSION['error_msg'] = "ID danh mục không hợp lệ.";
+            header('Location: ' . BASE_URL . '/Category/list');
+            exit();
+        }
+
         $category = $this->categoryModel->getCategoryById($id);
 
-        if ($category) {
+        if ($category && is_object($category)) {
             include 'app/views/category/edit.php';
         } else {
             $_SESSION['error_msg'] = "Không tìm thấy danh mục.";
@@ -72,7 +86,13 @@ class CategoryController
 
             if (is_array($result)) {
                 $errors = $result;
-                $category = $this->categoryModel->getCategoryById($id);
+                // Reconstruct the category object from submitted form data
+                // to preserve user input and guarantee a valid object structure
+                $category = (object)[
+                    'id' => $id,
+                    'name' => $name,
+                    'description' => $description
+                ];
                 include 'app/views/category/edit.php';
             } else {
                 $_SESSION['success_msg'] = "Cập nhật danh mục thành công!";

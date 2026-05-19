@@ -40,20 +40,15 @@ class ProductApiController
         return false;
     }
 
-    // Lấy danh sách sản phẩm
+    // Lấy danh sách sản phẩm — Public access (không yêu cầu JWT)
     public function index()
     {
-        if ($this->authenticate()) {
-            header('Content-Type: application/json');
-            $products = $this->productModel->getProducts();
-            echo json_encode($products);
-        } else {
-            http_response_code(401);
-            echo json_encode(['message' => 'Unauthorized']);
-        }
+        header('Content-Type: application/json');
+        $products = $this->productModel->getProducts();
+        echo json_encode($products);
     }
 
-    // Lấy thông tin sản phẩm theo ID
+    // Lấy thông tin sản phẩm theo ID — Public access
     public function show($id)
     {
         header('Content-Type: application/json');
@@ -66,18 +61,26 @@ class ProductApiController
         }
     }
 
-    // Thêm sản phẩm mới
+    // Thêm sản phẩm mới — Yêu cầu JWT
     public function store()
     {
         header('Content-Type: application/json');
+        
+        if (!$this->authenticate()) {
+            http_response_code(401);
+            echo json_encode(['message' => 'Unauthorized - Vui lòng đăng nhập để thực hiện']);
+            return;
+        }
+
         $data = json_decode(file_get_contents("php://input"), true);
 
         $name = $data['name'] ?? '';
         $description = $data['description'] ?? '';
         $price = $data['price'] ?? '';
         $category_id = $data['category_id'] ?? null;
+        $image = $data['image'] ?? '';
 
-        $result = $this->productModel->addProduct($name, $description, $price, $category_id);
+        $result = $this->productModel->addProduct($name, $description, $price, $category_id, $image);
 
         if (is_array($result)) {
             http_response_code(400);
@@ -88,10 +91,17 @@ class ProductApiController
         }
     }
 
-    // Cập nhật sản phẩm theo ID
+    // Cập nhật sản phẩm theo ID — Yêu cầu JWT
     public function update($id)
     {
         header('Content-Type: application/json');
+
+        if (!$this->authenticate()) {
+            http_response_code(401);
+            echo json_encode(['message' => 'Unauthorized - Vui lòng đăng nhập để thực hiện']);
+            return;
+        }
+
         $data = json_decode(file_get_contents("php://input"), true);
 
         $name = $data['name'] ?? '';
@@ -99,7 +109,11 @@ class ProductApiController
         $price = $data['price'] ?? '';
         $category_id = $data['category_id'] ?? null;
 
-        $result = $this->productModel->updateProduct($id, $name, $description, $price, $category_id);
+        // Preserve existing image — fetch from DB to prevent data loss
+        $existingProduct = $this->productModel->getProductById($id);
+        $image = $data['image'] ?? ($existingProduct ? $existingProduct->image : '');
+
+        $result = $this->productModel->updateProduct($id, $name, $description, $price, $category_id, $image);
 
         if ($result === true) {
             echo json_encode(['message' => 'Product updated successfully']);
@@ -112,10 +126,17 @@ class ProductApiController
         }
     }
 
-    // Xóa sản phẩm theo ID
+    // Xóa sản phẩm theo ID — Yêu cầu JWT
     public function destroy($id)
     {
         header('Content-Type: application/json');
+
+        if (!$this->authenticate()) {
+            http_response_code(401);
+            echo json_encode(['message' => 'Unauthorized - Vui lòng đăng nhập để thực hiện']);
+            return;
+        }
+
         $result = $this->productModel->deleteProduct($id);
 
         if ($result) {

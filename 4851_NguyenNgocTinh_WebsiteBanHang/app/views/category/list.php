@@ -58,13 +58,14 @@
 
 <script>
 function confirmDelete(id, name) {
+    const currentTheme = localStorage.getItem('theme') || 'dark';
     Swal.fire({
         title: 'Bạn có chắc chắn?',
         text: "Hành động này sẽ xóa danh mục '" + name + "'. Vui lòng đảm bảo không có sản phẩm nào thuộc danh mục này trước khi xóa!",
         icon: 'warning',
         showCancelButton: true,
-        background: '#1d1d1f',
-        color: '#f5f5f7',
+        background: currentTheme === 'light' ? '#ffffff' : '#1d1d1f',
+        color: currentTheme === 'light' ? '#1d1d1f' : '#f5f5f7',
         confirmButtonColor: '#ff453a',
         cancelButtonColor: '#0071e3',
         confirmButtonText: '<i class="fa-solid fa-trash me-2"></i>Có, hãy xóa!',
