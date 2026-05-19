@@ -34,7 +34,7 @@ class ProductApiController
             $jwt = $arr[1] ?? null;
             if ($jwt) {
                 $decoded = $this->jwtHandler->decode($jwt);
-                return $decoded ? true : false;
+                return $decoded ? (array)$decoded : false;
             }
         }
         return false;
@@ -61,14 +61,21 @@ class ProductApiController
         }
     }
 
-    // Thêm sản phẩm mới — Yêu cầu JWT
+    // Thêm sản phẩm mới — Yêu cầu JWT của Admin
     public function store()
     {
         header('Content-Type: application/json');
         
-        if (!$this->authenticate()) {
+        $decoded = $this->authenticate();
+        if (!$decoded) {
             http_response_code(401);
             echo json_encode(['message' => 'Unauthorized - Vui lòng đăng nhập để thực hiện']);
+            return;
+        }
+
+        if (!isset($decoded['role']) || $decoded['role'] !== 'admin') {
+            http_response_code(403);
+            echo json_encode(['message' => 'Forbidden - Chỉ tài khoản Admin mới có quyền thực hiện']);
             return;
         }
 
@@ -91,14 +98,21 @@ class ProductApiController
         }
     }
 
-    // Cập nhật sản phẩm theo ID — Yêu cầu JWT
+    // Cập nhật sản phẩm theo ID — Yêu cầu JWT của Admin
     public function update($id)
     {
         header('Content-Type: application/json');
 
-        if (!$this->authenticate()) {
+        $decoded = $this->authenticate();
+        if (!$decoded) {
             http_response_code(401);
             echo json_encode(['message' => 'Unauthorized - Vui lòng đăng nhập để thực hiện']);
+            return;
+        }
+
+        if (!isset($decoded['role']) || $decoded['role'] !== 'admin') {
+            http_response_code(403);
+            echo json_encode(['message' => 'Forbidden - Chỉ tài khoản Admin mới có quyền thực hiện']);
             return;
         }
 
@@ -126,14 +140,21 @@ class ProductApiController
         }
     }
 
-    // Xóa sản phẩm theo ID — Yêu cầu JWT
+    // Xóa sản phẩm theo ID — Yêu cầu JWT của Admin
     public function destroy($id)
     {
         header('Content-Type: application/json');
 
-        if (!$this->authenticate()) {
+        $decoded = $this->authenticate();
+        if (!$decoded) {
             http_response_code(401);
             echo json_encode(['message' => 'Unauthorized - Vui lòng đăng nhập để thực hiện']);
+            return;
+        }
+
+        if (!isset($decoded['role']) || $decoded['role'] !== 'admin') {
+            http_response_code(403);
+            echo json_encode(['message' => 'Forbidden - Chỉ tài khoản Admin mới có quyền thực hiện']);
             return;
         }
 

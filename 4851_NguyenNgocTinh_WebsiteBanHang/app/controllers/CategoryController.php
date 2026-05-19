@@ -13,10 +13,10 @@ class CategoryController
         $this->db = (new Database())->getConnection();
         $this->categoryModel = new CategoryModel($this->db);
 
-        // Bảo vệ toàn bộ CategoryController — chỉ user đã đăng nhập mới truy cập
-        if (!SessionHelper::isLoggedIn()) {
-            $_SESSION['error_msg'] = "Vui lòng đăng nhập để quản lý danh mục.";
-            header('Location: ' . BASE_URL . '/account/login');
+        // Bảo vệ toàn bộ CategoryController — chỉ Admin mới có quyền truy cập
+        if (!SessionHelper::isAdmin()) {
+            $_SESSION['error_msg'] = "Quyền truy cập bị từ chối. Chỉ Admin mới được quản lý danh mục.";
+            header('Location: ' . BASE_URL . '/Product');
             exit();
         }
     }
@@ -40,6 +40,12 @@ class CategoryController
     public function save()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $csrfToken = $_POST['csrf_token'] ?? '';
+            if (!SessionHelper::verifyCSRFToken($csrfToken)) {
+                $_SESSION['error_msg'] = "Yêu cầu không hợp lệ (CSRF Token không chính xác).";
+                header('Location: ' . BASE_URL . '/Category/list');
+                exit();
+            }
             $name = trim($_POST['name'] ?? '');
             $description = trim($_POST['description'] ?? '');
 
@@ -78,6 +84,12 @@ class CategoryController
     public function update()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $csrfToken = $_POST['csrf_token'] ?? '';
+            if (!SessionHelper::verifyCSRFToken($csrfToken)) {
+                $_SESSION['error_msg'] = "Yêu cầu không hợp lệ (CSRF Token không chính xác).";
+                header('Location: ' . BASE_URL . '/Category/list');
+                exit();
+            }
             $id = $_POST['id'] ?? '';
             $name = trim($_POST['name'] ?? '');
             $description = trim($_POST['description'] ?? '');

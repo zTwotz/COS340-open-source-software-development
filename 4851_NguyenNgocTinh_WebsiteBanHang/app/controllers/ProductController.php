@@ -22,18 +22,27 @@ class ProductController
     {
         $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $limit = 8;
-        $keyword = isset($_GET['search']) ? trim($_GET['search']) : '';
+        
+        $filters = [
+            'search' => isset($_GET['search']) ? trim($_GET['search']) : '',
+            'category_id' => isset($_GET['category_id']) && $_GET['category_id'] !== '' ? (int)$_GET['category_id'] : null,
+            'min_price' => isset($_GET['min_price']) && $_GET['min_price'] !== '' ? (float)$_GET['min_price'] : null,
+            'max_price' => isset($_GET['max_price']) && $_GET['max_price'] !== '' ? (float)$_GET['max_price'] : null,
+            'sort_by' => isset($_GET['sort_by']) ? trim($_GET['sort_by']) : 'newest'
+        ];
 
-        if (!empty($keyword)) {
-            $products = $this->productModel->searchProducts($keyword, $page, $limit);
-            $totalProducts = $this->productModel->getTotalSearchProducts($keyword);
-        } else {
-            $products = $this->productModel->getProductsPaginated($page, $limit);
-            $totalProducts = $this->productModel->getTotalProducts();
-        }
+        $products = $this->productModel->getProductsFiltered($filters, $page, $limit);
+        $totalProducts = $this->productModel->getTotalProductsFiltered($filters);
 
         $totalPages = ceil($totalProducts / $limit);
         $categories = $this->categoryModel->getCategories();
+
+        // Định nghĩa các biến để view sử dụng lại giá trị cũ
+        $keyword = $filters['search'];
+        $selected_category_id = $filters['category_id'];
+        $min_price = $filters['min_price'];
+        $max_price = $filters['max_price'];
+        $sort_by = $filters['sort_by'];
 
         include 'app/views/product/list.php';
     }
@@ -51,12 +60,12 @@ class ProductController
         }
     }
 
-    // Thêm sản phẩm — YÊU CẦU ĐĂNG NHẬP
+    // Thêm sản phẩm — YÊU CẦU QUYỀN ADMIN
     public function add()
     {
-        if (!SessionHelper::isLoggedIn()) {
-            $_SESSION['error_msg'] = "Vui lòng đăng nhập để thêm sản phẩm.";
-            header('Location: ' . BASE_URL . '/account/login');
+        if (!SessionHelper::isAdmin()) {
+            $_SESSION['error_msg'] = "Quyền truy cập bị từ chối. Chỉ Admin mới được thực hiện chức năng này.";
+            header('Location: ' . BASE_URL . '/Product');
             exit();
         }
         $categories = $this->categoryModel->getCategories();
@@ -65,13 +74,19 @@ class ProductController
 
     public function save()
     {
-        if (!SessionHelper::isLoggedIn()) {
-            $_SESSION['error_msg'] = "Vui lòng đăng nhập để thực hiện.";
-            header('Location: ' . BASE_URL . '/account/login');
+        if (!SessionHelper::isAdmin()) {
+            $_SESSION['error_msg'] = "Quyền truy cập bị từ chối. Chỉ Admin mới được thực hiện chức năng này.";
+            header('Location: ' . BASE_URL . '/Product');
             exit();
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $csrfToken = $_POST['csrf_token'] ?? '';
+            if (!SessionHelper::verifyCSRFToken($csrfToken)) {
+                $_SESSION['error_msg'] = "Yêu cầu không hợp lệ (CSRF Token không chính xác).";
+                header('Location: ' . BASE_URL . '/Product');
+                exit();
+            }
             $name = trim($_POST['name'] ?? '');
             $description = trim($_POST['description'] ?? '');
             $price = $_POST['price'] ?? '';
@@ -109,12 +124,12 @@ class ProductController
         }
     }
 
-    // Sửa sản phẩm — YÊU CẦU ĐĂNG NHẬP
+    // Sửa sản phẩm — YÊU CẦU QUYỀN ADMIN
     public function edit($id)
     {
-        if (!SessionHelper::isLoggedIn()) {
-            $_SESSION['error_msg'] = "Vui lòng đăng nhập để sửa sản phẩm.";
-            header('Location: ' . BASE_URL . '/account/login');
+        if (!SessionHelper::isAdmin()) {
+            $_SESSION['error_msg'] = "Quyền truy cập bị từ chối. Chỉ Admin mới được thực hiện chức năng này.";
+            header('Location: ' . BASE_URL . '/Product');
             exit();
         }
 
@@ -132,13 +147,19 @@ class ProductController
 
     public function update()
     {
-        if (!SessionHelper::isLoggedIn()) {
-            $_SESSION['error_msg'] = "Vui lòng đăng nhập để thực hiện.";
-            header('Location: ' . BASE_URL . '/account/login');
+        if (!SessionHelper::isAdmin()) {
+            $_SESSION['error_msg'] = "Quyền truy cập bị từ chối. Chỉ Admin mới được thực hiện chức năng này.";
+            header('Location: ' . BASE_URL . '/Product');
             exit();
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $csrfToken = $_POST['csrf_token'] ?? '';
+            if (!SessionHelper::verifyCSRFToken($csrfToken)) {
+                $_SESSION['error_msg'] = "Yêu cầu không hợp lệ (CSRF Token không chính xác).";
+                header('Location: ' . BASE_URL . '/Product');
+                exit();
+            }
             $id = $_POST['id'];
             $name = trim($_POST['name'] ?? '');
             $description = trim($_POST['description'] ?? '');
@@ -195,12 +216,12 @@ class ProductController
         }
     }
 
-    // Xóa sản phẩm — YÊU CẦU ĐĂNG NHẬP
+    // Xóa sản phẩm — YÊU CẦU QUYỀN ADMIN
     public function delete($id)
     {
-        if (!SessionHelper::isLoggedIn()) {
-            $_SESSION['error_msg'] = "Vui lòng đăng nhập để thực hiện.";
-            header('Location: ' . BASE_URL . '/account/login');
+        if (!SessionHelper::isAdmin()) {
+            $_SESSION['error_msg'] = "Quyền truy cập bị từ chối. Chỉ Admin mới được thực hiện chức năng này.";
+            header('Location: ' . BASE_URL . '/Product');
             exit();
         }
 

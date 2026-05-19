@@ -63,6 +63,7 @@ if (!isset($category) || !is_object($category)) {
             <?php endif; ?>
 
             <form method="POST" action="<?php echo BASE_URL; ?>/Category/update">
+                <input type="hidden" name="csrf_token" value="<?php echo SessionHelper::getCSRFToken(); ?>">
                 <input type="hidden" name="id" value="<?php echo $category->id; ?>">
 
                 <div class="mb-4">

@@ -11,7 +11,7 @@ class ProductModel
 
     public function getProducts()
     {
-        $query = "SELECT p.id, p.name, p.description, p.price, p.image, p.category_id, c.name as category_name
+        $query = "SELECT p.id, p.name, p.description, p.price, p.sale_price, p.stock, p.image, p.category_id, p.is_featured, p.brand, p.slug, c.name as category_name
                   FROM " . $this->table_name . " p
                   LEFT JOIN category c ON p.category_id = c.id
                   ORDER BY p.id DESC";
@@ -25,7 +25,7 @@ class ProductModel
     public function getProductsPaginated($page = 1, $limit = 8)
     {
         $offset = ($page - 1) * $limit;
-        $query = "SELECT p.id, p.name, p.description, p.price, p.image, p.category_id, c.name as category_name
+        $query = "SELECT p.id, p.name, p.description, p.price, p.sale_price, p.stock, p.image, p.category_id, p.is_featured, p.brand, p.slug, c.name as category_name
                   FROM " . $this->table_name . " p
                   LEFT JOIN category c ON p.category_id = c.id
                   ORDER BY p.id DESC
@@ -52,7 +52,7 @@ class ProductModel
     {
         $offset = ($page - 1) * $limit;
         $searchTerm = '%' . $keyword . '%';
-        $query = "SELECT p.id, p.name, p.description, p.price, p.image, p.category_id, c.name as category_name
+        $query = "SELECT p.id, p.name, p.description, p.price, p.sale_price, p.stock, p.image, p.category_id, p.is_featured, p.brand, p.slug, c.name as category_name
                   FROM " . $this->table_name . " p
                   LEFT JOIN category c ON p.category_id = c.id
                   WHERE p.name LIKE :keyword OR p.description LIKE :keyword2 OR c.name LIKE :keyword3
@@ -88,7 +88,7 @@ class ProductModel
     public function getProductsByCategory($category_id, $page = 1, $limit = 8)
     {
         $offset = ($page - 1) * $limit;
-        $query = "SELECT p.id, p.name, p.description, p.price, p.image, p.category_id, c.name as category_name
+        $query = "SELECT p.id, p.name, p.description, p.price, p.sale_price, p.stock, p.image, p.category_id, p.is_featured, p.brand, p.slug, c.name as category_name
                   FROM " . $this->table_name . " p
                   LEFT JOIN category c ON p.category_id = c.id
                   WHERE p.category_id = :category_id
@@ -102,9 +102,20 @@ class ProductModel
         return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 
+    // Đếm tổng số sản phẩm theo danh mục
+    public function getTotalProductsByCategory($category_id)
+    {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " WHERE category_id = :category_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':category_id', $category_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_OBJ);
+        return $row->total;
+    }
+
     public function getProductById($id)
     {
-        $query = "SELECT p.id, p.name, p.description, p.price, p.image, p.category_id, c.name as category_name
+        $query = "SELECT p.id, p.name, p.description, p.price, p.sale_price, p.stock, p.image, p.category_id, p.is_featured, p.brand, p.slug, c.name as category_name
                   FROM " . $this->table_name . " p
                   LEFT JOIN category c ON p.category_id = c.id
                   WHERE p.id = :id";
@@ -215,6 +226,162 @@ class ProductModel
             return true;
         }
         return false;
+    }
+
+    public function getFeaturedProducts($limit = 4)
+    {
+        $query = "SELECT p.id, p.name, p.description, p.price, p.sale_price, p.stock, p.image, p.category_id, p.is_featured, p.brand, p.slug, c.name as category_name
+                  FROM " . $this->table_name . " p
+                  LEFT JOIN category c ON p.category_id = c.id
+                  WHERE p.is_featured = 1
+                  ORDER BY p.id DESC
+                  LIMIT :limit";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    public function getNewArrivals($limit = 4)
+    {
+        $query = "SELECT p.id, p.name, p.description, p.price, p.sale_price, p.stock, p.image, p.category_id, p.is_featured, p.brand, p.slug, c.name as category_name
+                  FROM " . $this->table_name . " p
+                  LEFT JOIN category c ON p.category_id = c.id
+                  ORDER BY p.id DESC
+                  LIMIT :limit";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    public function getDiscountedProducts($limit = 4)
+    {
+        $query = "SELECT p.id, p.name, p.description, p.price, p.sale_price, p.stock, p.image, p.category_id, p.is_featured, p.brand, p.slug, c.name as category_name
+                  FROM " . $this->table_name . " p
+                  LEFT JOIN category c ON p.category_id = c.id
+                  WHERE p.sale_price IS NOT NULL AND p.sale_price < p.price
+                  ORDER BY (p.price - p.sale_price) DESC
+                  LIMIT :limit";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    // Lấy sản phẩm theo các bộ lọc kết hợp (Tìm kiếm, Danh mục, Giá, Sắp xếp, Phân trang)
+    public function getProductsFiltered($filters = [], $page = 1, $limit = 8)
+    {
+        $offset = ($page - 1) * $limit;
+        
+        $sql = "SELECT p.id, p.name, p.description, p.price, p.sale_price, p.stock, p.image, p.category_id, p.is_featured, p.brand, p.slug, c.name as category_name
+                FROM " . $this->table_name . " p
+                LEFT JOIN category c ON p.category_id = c.id
+                WHERE 1=1";
+        
+        $params = [];
+        
+        if (!empty($filters['search'])) {
+            $sql .= " AND (p.name LIKE :search OR p.description LIKE :search2 OR c.name LIKE :search3)";
+            $searchTerm = '%' . $filters['search'] . '%';
+            $params[':search'] = $searchTerm;
+            $params[':search2'] = $searchTerm;
+            $params[':search3'] = $searchTerm;
+        }
+        
+        if (!empty($filters['category_id'])) {
+            $sql .= " AND p.category_id = :category_id";
+            $params[':category_id'] = (int)$filters['category_id'];
+        }
+        
+        if (!empty($filters['min_price'])) {
+            $sql .= " AND COALESCE(p.sale_price, p.price) >= :min_price";
+            $params[':min_price'] = (float)$filters['min_price'];
+        }
+        
+        if (!empty($filters['max_price'])) {
+            $sql .= " AND COALESCE(p.sale_price, p.price) <= :max_price";
+            $params[':max_price'] = (float)$filters['max_price'];
+        }
+        
+        // Sorting
+        $sort = $filters['sort_by'] ?? 'newest';
+        switch ($sort) {
+            case 'price_asc':
+                $sql .= " ORDER BY COALESCE(p.sale_price, p.price) ASC";
+                break;
+            case 'price_desc':
+                $sql .= " ORDER BY COALESCE(p.sale_price, p.price) DESC";
+                break;
+            case 'name_asc':
+                $sql .= " ORDER BY p.name ASC";
+                break;
+            case 'name_desc':
+                $sql .= " ORDER BY p.name DESC";
+                break;
+            case 'newest':
+            default:
+                $sql .= " ORDER BY p.id DESC";
+                break;
+        }
+        
+        $sql .= " LIMIT :limit OFFSET :offset";
+        
+        $stmt = $this->conn->prepare($sql);
+        
+        foreach ($params as $key => $val) {
+            $stmt->bindValue($key, $val);
+        }
+        
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    // Đếm tổng số sản phẩm sau khi lọc
+    public function getTotalProductsFiltered($filters = [])
+    {
+        $sql = "SELECT COUNT(*) as total 
+                FROM " . $this->table_name . " p
+                LEFT JOIN category c ON p.category_id = c.id
+                WHERE 1=1";
+        
+        $params = [];
+        
+        if (!empty($filters['search'])) {
+            $sql .= " AND (p.name LIKE :search OR p.description LIKE :search2 OR c.name LIKE :search3)";
+            $searchTerm = '%' . $filters['search'] . '%';
+            $params[':search'] = $searchTerm;
+            $params[':search2'] = $searchTerm;
+            $params[':search3'] = $searchTerm;
+        }
+        
+        if (!empty($filters['category_id'])) {
+            $sql .= " AND p.category_id = :category_id";
+            $params[':category_id'] = (int)$filters['category_id'];
+        }
+        
+        if (!empty($filters['min_price'])) {
+            $sql .= " AND COALESCE(p.sale_price, p.price) >= :min_price";
+            $params[':min_price'] = (float)$filters['min_price'];
+        }
+        
+        if (!empty($filters['max_price'])) {
+            $sql .= " AND COALESCE(p.sale_price, p.price) <= :max_price";
+            $params[':max_price'] = (float)$filters['max_price'];
+        }
+        
+        $stmt = $this->conn->prepare($sql);
+        
+        foreach ($params as $key => $val) {
+            $stmt->bindValue($key, $val);
+        }
+        
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_OBJ);
+        return $row->total;
     }
 }
 ?>
