@@ -52,6 +52,7 @@
             <?php endif; ?>
 
             <form method="POST" action="<?php echo BASE_URL; ?>/Category/save">
+                <input type="hidden" name="csrf_token" value="<?php echo SessionHelper::getCSRFToken(); ?>">
                 <div class="mb-4">
                     <label for="name" class="form-label">Tên danh mục:</label>
                     <input type="text" id="name" name="name" class="form-control form-control-glass" placeholder="Nhập tên danh mục (ví dụ: Điện thoại)..." required>

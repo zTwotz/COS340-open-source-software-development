@@ -281,10 +281,12 @@ document.addEventListener("DOMContentLoaded", function() {
             jsonData[key] = value;
         });
 
+        const token = localStorage.getItem('jwtToken');
         fetch(`<?= BASE_URL ?>/api/product/${jsonData.id}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + (token || '')
             },
             body: JSON.stringify(jsonData)
         })

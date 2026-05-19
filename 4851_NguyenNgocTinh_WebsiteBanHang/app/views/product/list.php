@@ -224,6 +224,46 @@
     .product-card:nth-child(6) { animation-delay: 0.24s; }
     .product-card:nth-child(7) { animation-delay: 0.28s; }
     .product-card:nth-child(8) { animation-delay: 0.32s; }
+
+    /* Premium Dropdown & Input Styles */
+    .custom-select-premium, .price-input-premium {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        color: var(--text-main);
+        border-radius: 980px;
+        padding: 0.6rem 1rem;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+    }
+
+    .custom-select-premium:focus, .price-input-premium:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.12);
+        color: var(--text-main);
+        outline: none;
+    }
+
+    [data-theme="light"] .custom-select-premium, [data-theme="light"] .price-input-premium {
+        background: rgba(0, 0, 0, 0.03);
+        color: #1d1d1f;
+    }
+
+    [data-theme="light"] .custom-select-premium:focus, [data-theme="light"] .price-input-premium:focus {
+        background: rgba(0, 0, 0, 0.05);
+        color: #1d1d1f;
+    }
+
+    /* Option elements styling */
+    .custom-select-premium option {
+        background: #1d1d1f;
+        color: #f5f5f7;
+    }
+
+    [data-theme="light"] .custom-select-premium option {
+        background: #ffffff;
+        color: #1d1d1f;
+    }
 </style>
 
 <!-- Page Header -->
@@ -238,7 +278,7 @@
                 <i class="fa-solid fa-box-open"></i>
                 <span><?php echo $totalProducts ?? count($products); ?> sản phẩm</span>
             </div>
-            <?php if (SessionHelper::isLoggedIn()): ?>
+            <?php if (SessionHelper::isAdmin()): ?>
                 <a href="<?php echo BASE_URL; ?>/Product/add" class="btn btn-premium">
                     <i class="fa-solid fa-plus me-2"></i>Thêm sản phẩm
                 </a>
@@ -247,32 +287,93 @@
     </div>
 </div>
 
-<!-- Search Bar -->
-<div class="row mb-4">
-    <div class="col-12">
-        <form method="GET" action="<?php echo BASE_URL; ?>/Product" class="d-flex gap-3 align-items-center flex-wrap">
-            <div class="search-box flex-grow-1" style="max-width: 450px;">
+<!-- Filter Form Panel -->
+<div class="glass-card mb-4 p-4">
+    <form id="filterForm" method="GET" action="<?php echo BASE_URL; ?>/Product" class="row g-3 align-items-end">
+        <!-- Search Keyword -->
+        <div class="col-12 col-md-4">
+            <label class="form-label text-muted small fw-bold text-uppercase mb-2"><i class="fa-solid fa-magnifying-glass me-1"></i>Từ khóa</label>
+            <div class="search-box" style="max-width: 100%;">
                 <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="text" name="search" class="form-control" placeholder="Tìm kiếm sản phẩm, danh mục..." 
+                <input type="text" id="searchInput" name="search" class="form-control" placeholder="Tìm tên, mô tả..." 
                        value="<?php echo htmlspecialchars($keyword ?? '', ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off">
             </div>
-            <button type="submit" class="btn btn-premium">
-                <i class="fa-solid fa-search me-1"></i>Tìm
-            </button>
-            <?php if (!empty($keyword)): ?>
-                <a href="<?php echo BASE_URL; ?>/Product" class="btn btn-glass-secondary">
-                    <i class="fa-solid fa-xmark me-1"></i>Xóa bộ lọc
+        </div>
+        
+        <!-- Category Filter -->
+        <div class="col-6 col-md-2">
+            <label class="form-label text-muted small fw-bold text-uppercase mb-2"><i class="fa-solid fa-tags me-1"></i>Danh mục</label>
+            <select name="category_id" class="form-select custom-select-premium" onchange="submitFilterForm()">
+                <option value="">Tất cả</option>
+                <?php foreach ($categories as $cat): ?>
+                    <option value="<?php echo $cat->id; ?>" <?php echo (isset($selected_category_id) && $selected_category_id == $cat->id) ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($cat->name, ENT_QUOTES, 'UTF-8'); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <!-- Sorting -->
+        <div class="col-6 col-md-2">
+            <label class="form-label text-muted small fw-bold text-uppercase mb-2"><i class="fa-solid fa-arrow-down-wide-short me-1"></i>Sắp xếp</label>
+            <select name="sort_by" class="form-select custom-select-premium" onchange="submitFilterForm()">
+                <option value="newest" <?php echo ($sort_by ?? 'newest') == 'newest' ? 'selected' : ''; ?>>Mới nhất</option>
+                <option value="price_asc" <?php echo ($sort_by ?? '') == 'price_asc' ? 'selected' : ''; ?>>Giá tăng dần</option>
+                <option value="price_desc" <?php echo ($sort_by ?? '') == 'price_desc' ? 'selected' : ''; ?>>Giá giảm dần</option>
+                <option value="name_asc" <?php echo ($sort_by ?? '') == 'name_asc' ? 'selected' : ''; ?>>Tên A-Z</option>
+                <option value="name_desc" <?php echo ($sort_by ?? '') == 'name_desc' ? 'selected' : ''; ?>>Tên Z-A</option>
+            </select>
+        </div>
+
+        <!-- Price Range Filter -->
+        <div class="col-12 col-md-4">
+            <label class="form-label text-muted small fw-bold text-uppercase mb-2"><i class="fa-solid fa-money-bill-wave me-1"></i>Khoảng giá (VND)</label>
+            <div class="d-flex align-items-center gap-2">
+                <input type="number" id="minPriceInput" name="min_price" class="form-control price-input-premium" placeholder="Min" 
+                       value="<?php echo isset($min_price) ? htmlspecialchars($min_price, ENT_QUOTES, 'UTF-8') : ''; ?>">
+                <span class="text-muted">—</span>
+                <input type="number" id="maxPriceInput" name="max_price" class="form-control price-input-premium" placeholder="Max" 
+                       value="<?php echo isset($max_price) ? htmlspecialchars($max_price, ENT_QUOTES, 'UTF-8') : ''; ?>">
+                <a href="<?php echo BASE_URL; ?>/Product" class="btn btn-glass-secondary px-3" title="Xóa bộ lọc">
+                    <i class="fa-solid fa-rotate-left"></i>
                 </a>
-            <?php endif; ?>
-        </form>
-    </div>
+            </div>
+        </div>
+    </form>
 </div>
 
-<?php if (!empty($keyword)): ?>
-    <div class="mb-3">
-        <span class="text-muted">Kết quả tìm kiếm cho: </span>
-        <span class="badge-premium">"<?php echo htmlspecialchars($keyword, ENT_QUOTES, 'UTF-8'); ?>"</span>
-        <span class="text-muted ms-2">(<?php echo $totalProducts; ?> kết quả)</span>
+<?php if (!empty($keyword) || !empty($selected_category_id) || !empty($min_price) || !empty($max_price)): ?>
+    <div class="mb-4 d-flex align-items-center gap-2 flex-wrap">
+        <span class="text-muted small">Đang lọc theo:</span>
+        <?php if (!empty($keyword)): ?>
+            <span class="badge-premium" style="font-size: 0.8rem;">Từ khóa: "<?php echo htmlspecialchars($keyword, ENT_QUOTES, 'UTF-8'); ?>"</span>
+        <?php endif; ?>
+        <?php if (!empty($selected_category_id)): ?>
+            <?php 
+            $selected_cat_name = 'Danh mục';
+            foreach ($categories as $cat) {
+                if ($cat->id == $selected_category_id) {
+                    $selected_cat_name = $cat->name;
+                    break;
+                }
+            }
+            ?>
+            <span class="badge-premium" style="font-size: 0.8rem;">Danh mục: <?php echo htmlspecialchars($selected_cat_name, ENT_QUOTES, 'UTF-8'); ?></span>
+        <?php endif; ?>
+        <?php if (!empty($min_price) || !empty($max_price)): ?>
+            <span class="badge-premium" style="font-size: 0.8rem;">Giá: 
+                <?php 
+                if (!empty($min_price) && !empty($max_price)) {
+                    echo number_format($min_price, 0, ',', '.') . 'đ - ' . number_format($max_price, 0, ',', '.') . 'đ';
+                } elseif (!empty($min_price)) {
+                    echo '>= ' . number_format($min_price, 0, ',', '.') . 'đ';
+                } else {
+                    echo '<= ' . number_format($max_price, 0, ',', '.') . 'đ';
+                }
+                ?>
+            </span>
+        <?php endif; ?>
+        <span class="text-muted ms-md-auto small">(Tìm thấy <?php echo $totalProducts; ?> kết quả)</span>
     </div>
 <?php endif; ?>
 
@@ -322,7 +423,7 @@
                             <a href="<?php echo BASE_URL; ?>/Product/addToCart/<?php echo $product->id; ?>" class="btn btn-premium btn-sm flex-grow-1" style="font-size: 0.75rem;">
                                 <i class="fa-solid fa-cart-plus me-1"></i>Thêm giỏ
                             </a>
-                            <?php if (SessionHelper::isLoggedIn()): ?>
+                            <?php if (SessionHelper::isAdmin()): ?>
                                 <a href="<?php echo BASE_URL; ?>/Product/edit/<?php echo $product->id; ?>" class="btn btn-premium-warning btn-sm" style="font-size: 0.75rem; padding: 6px 10px;">
                                     <i class="fa-solid fa-pen"></i>
                                 </a>
@@ -342,7 +443,9 @@
         <nav class="mt-5 d-flex justify-content-center">
             <ul class="pagination pagination-premium mb-0">
                 <?php 
-                $queryParams = !empty($keyword) ? '&search=' . urlencode($keyword) : '';
+                $getParams = $_GET;
+                unset($getParams['page']);
+                $queryParams = !empty($getParams) ? '&' . http_build_query($getParams) : '';
                 ?>
                 <li class="page-item <?php echo ($page <= 1) ? 'disabled' : ''; ?>">
                     <a class="page-link" href="<?php echo BASE_URL; ?>/Product?page=<?php echo $page - 1; ?><?php echo $queryParams; ?>">
@@ -384,6 +487,30 @@ function confirmDelete(id, name) {
         }
     })
 }
+
+// Dynamic Filter Functions
+let filterTimeout = null;
+
+function submitFilterForm() {
+    document.getElementById('filterForm').submit();
+}
+
+function debouncedSubmitFilterForm() {
+    clearTimeout(filterTimeout);
+    filterTimeout = setTimeout(() => {
+        submitFilterForm();
+    }, 600);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchInput');
+    const minPriceInput = document.getElementById('minPriceInput');
+    const maxPriceInput = document.getElementById('maxPriceInput');
+    
+    if (searchInput) searchInput.addEventListener('input', debouncedSubmitFilterForm);
+    if (minPriceInput) minPriceInput.addEventListener('input', debouncedSubmitFilterForm);
+    if (maxPriceInput) maxPriceInput.addEventListener('input', debouncedSubmitFilterForm);
+});
 </script>
 
 <?php include 'app/views/shares/footer.php'; ?>

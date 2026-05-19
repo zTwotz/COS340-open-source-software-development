@@ -451,13 +451,24 @@
     <!-- Dynamic base path detection -->
     <?php
     $current_uri = $_SERVER['REQUEST_URI'] ?? '';
+    $request_path = parse_url($current_uri, PHP_URL_PATH);
+    $request_path = is_string($request_path) ? $request_path : '';
+    $relative_path = str_replace(BASE_URL, '', $request_path);
+    $relative_path = is_string($relative_path) ? trim($relative_path, '/') : '';
+    
     function is_active($route) {
-        global $current_uri;
-        if (!empty($route) && is_string($route) && is_string($current_uri) && strpos($current_uri, $route) !== false) {
+        global $relative_path;
+        $rel = is_string($relative_path) ? $relative_path : '';
+        $r = is_string($route) ? trim($route, '/') : '';
+        if ($r === $rel) {
+            return 'active';
+        }
+        if (!empty($r) && $r !== '/' && strpos($rel, $r) === 0) {
             return 'active';
         }
         return '';
     }
+    $is_home = (empty($relative_path) || $relative_path === 'index.php');
     
     // Count items in cart
     $cart_count = 0;
@@ -474,10 +485,17 @@
     $currentRole = $_SESSION['user_role'] ?? 'user';
     ?>
 
+    <script>
+        // Clear JWT token in localStorage if user is not logged in in PHP Session
+        if (!<?php echo $isLoggedIn ? 'true' : 'false'; ?>) {
+            localStorage.removeItem('jwtToken');
+        }
+    </script>
+
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="<?php echo BASE_URL; ?>/Product">
+            <a class="navbar-brand" href="<?php echo BASE_URL; ?>/">
                 <i class="fa-solid fa-laptop-code me-2 text-primary"></i>NTECH STORE
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -486,11 +504,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link <?php echo is_active('/Product') && !is_active('/Product/add') && !is_active('/Product/cart') && !is_active('/Product/checkout') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/Product">
+                        <a class="nav-link <?php echo $is_home ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/">
+                            <i class="fa-solid fa-house me-1"></i>Trang chủ
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?php echo (is_active('/Product') && !is_active('/Product/add') && !is_active('/Product/cart') && !is_active('/Product/checkout')) ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/Product">
                             <i class="fa-solid fa-boxes-stacked me-1"></i>Sản phẩm
                         </a>
                     </li>
-                    <?php if ($isLoggedIn): ?>
+                    <?php if ($isLoggedIn && $currentRole === 'admin'): ?>
                         <li class="nav-item">
                             <a class="nav-link <?php echo is_active('/Product/add') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/Product/add">
                                 <i class="fa-solid fa-plus me-1"></i>Thêm sản phẩm

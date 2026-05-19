@@ -9,7 +9,7 @@ class JWTHandler
 
     public function __construct()
     {
-        $this->secret_key = "HUTECH"; // Thay thế bằng khóa bí mật của bạn
+        $this->secret_key = "HUTECH_SUPER_SECRET_KEY_FOR_JWT_SIGNING"; // Must be at least 256 bits (32 bytes)
     }
 
     // Tạo JWT
