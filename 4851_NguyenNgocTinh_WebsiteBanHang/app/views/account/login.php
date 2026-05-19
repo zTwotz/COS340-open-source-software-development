@@ -153,8 +153,12 @@ document.getElementById('login-form').addEventListener('submit', function(event)
         if (data.token) {
             // Store JWT token for API calls
             localStorage.setItem('jwtToken', data.token);
+            // Connect socket session immediately
+            if (typeof SocketManager !== 'undefined') {
+                SocketManager.connect(data.token);
+            }
             // Session is already set by server, redirect
-            location.href = '<?= BASE_URL ?>/Product';
+            location.href = '<?= BASE_URL ?>/';
         } else {
             const errDiv = document.getElementById('error-message');
             errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation me-2"></i>' + (data.message || 'Đăng nhập thất bại');

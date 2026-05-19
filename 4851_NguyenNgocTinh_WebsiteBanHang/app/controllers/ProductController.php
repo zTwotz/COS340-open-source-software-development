@@ -284,12 +284,23 @@ class ProductController
             $_SESSION['cart'] = [];
         }
 
+        $currentQtyInCart = isset($_SESSION['cart'][$id]) ? $_SESSION['cart'][$id]['quantity'] : 0;
+        $newQty = $currentQtyInCart + 1;
+
+        if ($newQty > $product->stock) {
+            $_SESSION['error_msg'] = "Không thể thêm sản phẩm. Số lượng trong kho chỉ còn " . $product->stock . " sản phẩm.";
+            header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? (BASE_URL . '/Product')));
+            exit();
+        }
+
+        $price = $product->sale_price !== null ? $product->sale_price : $product->price;
+
         if (isset($_SESSION['cart'][$id])) {
             $_SESSION['cart'][$id]['quantity']++;
         } else {
             $_SESSION['cart'][$id] = [
                 'name' => $product->name,
-                'price' => $product->price,
+                'price' => $price,
                 'quantity' => 1,
                 'image' => $product->image
             ];
@@ -302,12 +313,14 @@ class ProductController
 
     public function cart()
     {
+        $categories = $this->categoryModel->getCategories();
         include 'app/views/product/cart.php';
     }
 
     public function clearCart()
     {
         unset($_SESSION['cart']);
+        unset($_SESSION['coupon']);
         $_SESSION['success_msg'] = "Đã xóa toàn bộ giỏ hàng!";
         header('Location: ' . BASE_URL . '/Product/cart');
         exit();
@@ -317,10 +330,18 @@ class ProductController
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['quantities'])) {
             foreach ($_POST['quantities'] as $id => $quantity) {
+                $product = $this->productModel->getProductById($id);
+                if (!$product) continue;
+
+                $quantity = (int)$quantity;
                 if ($quantity <= 0) {
                     unset($_SESSION['cart'][$id]);
                 } else {
-                    $_SESSION['cart'][$id]['quantity'] = (int)$quantity;
+                    if ($quantity > $product->stock) {
+                        $quantity = $product->stock;
+                        $_SESSION['warning_msg'] = "Một số sản phẩm đã được giới hạn số lượng theo kho hàng hiện tại.";
+                    }
+                    $_SESSION['cart'][$id]['quantity'] = $quantity;
                 }
             }
             $_SESSION['success_msg'] = "Cập nhật giỏ hàng thành công!";
@@ -339,6 +360,167 @@ class ProductController
         exit();
     }
 
+    public function updateCartAjax()
+    {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Phương thức yêu cầu không hợp lệ.']);
+            exit();
+        }
+
+        $id = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
+        $quantity = isset($_POST['quantity']) ? (int)$_POST['quantity'] : 1;
+
+        $product = $this->productModel->getProductById($id);
+        if (!$product) {
+            echo json_encode(['success' => false, 'message' => 'Không tìm thấy sản phẩm.']);
+            exit();
+        }
+
+        $warning = false;
+        $msg = '';
+
+        if ($quantity <= 0) {
+            unset($_SESSION['cart'][$id]);
+            $item_subtotal = 0;
+        } else {
+            if ($quantity > $product->stock) {
+                $quantity = $product->stock;
+                $warning = true;
+                $msg = "Số lượng sản phẩm trong kho chỉ còn " . $product->stock . ".";
+            }
+            $_SESSION['cart'][$id]['quantity'] = $quantity;
+            $price = $_SESSION['cart'][$id]['price'];
+            $item_subtotal = $price * $quantity;
+        }
+
+        $grand_total = 0;
+        if (isset($_SESSION['cart'])) {
+            foreach ($_SESSION['cart'] as $item) {
+                $grand_total += $item['price'] * $item['quantity'];
+            }
+        }
+
+        $discount_amount = $this->calculateDiscount($grand_total);
+        $final_total = max(0, $grand_total - $discount_amount);
+
+        echo json_encode([
+            'success' => true,
+            'warning' => $warning,
+            'message' => $msg,
+            'quantity' => $quantity,
+            'item_subtotal' => number_format($item_subtotal, 0, ',', '.'),
+            'grand_total' => number_format($grand_total, 0, ',', '.'),
+            'discount_amount' => number_format($discount_amount, 0, ',', '.'),
+            'final_total' => number_format($final_total, 0, ',', '.'),
+            'cart_count' => $this->getCartCount()
+        ]);
+        exit();
+    }
+
+    public function applyCouponAjax()
+    {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Phương thức yêu cầu không hợp lệ.']);
+            exit();
+        }
+
+        $code = isset($_POST['coupon_code']) ? strtoupper(trim($_POST['coupon_code'])) : '';
+        if (empty($code)) {
+            echo json_encode(['success' => false, 'message' => 'Vui lòng nhập mã giảm giá.']);
+            exit();
+        }
+
+        $valid_coupons = [
+            'NTECH10' => ['type' => 'percentage', 'value' => 10, 'description' => 'Giảm 10% tổng hóa đơn'],
+            'GIARE' => ['type' => 'flat', 'value' => 50000, 'description' => 'Giảm 50.000đ cho đơn hàng']
+        ];
+
+        if (!array_key_exists($code, $valid_coupons)) {
+            echo json_encode(['success' => false, 'message' => 'Mã giảm giá không hợp lệ hoặc đã hết hạn.']);
+            exit();
+        }
+
+        $coupon = $valid_coupons[$code];
+        $_SESSION['coupon'] = [
+            'code' => $code,
+            'type' => $coupon['type'],
+            'value' => $coupon['value'],
+            'description' => $coupon['description']
+        ];
+
+        $grand_total = 0;
+        if (isset($_SESSION['cart'])) {
+            foreach ($_SESSION['cart'] as $item) {
+                $grand_total += $item['price'] * $item['quantity'];
+            }
+        }
+
+        $discount_amount = $this->calculateDiscount($grand_total);
+        $final_total = max(0, $grand_total - $discount_amount);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Áp dụng mã giảm giá thành công!',
+            'coupon_code' => $code,
+            'description' => $coupon['description'],
+            'discount_amount' => number_format($discount_amount, 0, ',', '.'),
+            'final_total' => number_format($final_total, 0, ',', '.')
+        ]);
+        exit();
+    }
+
+    public function removeCouponAjax()
+    {
+        header('Content-Type: application/json');
+        unset($_SESSION['coupon']);
+
+        $grand_total = 0;
+        if (isset($_SESSION['cart'])) {
+            foreach ($_SESSION['cart'] as $item) {
+                $grand_total += $item['price'] * $item['quantity'];
+            }
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Đã xóa mã giảm giá.',
+            'grand_total' => number_format($grand_total, 0, ',', '.')
+        ]);
+        exit();
+    }
+
+    private function calculateDiscount($grand_total)
+    {
+        if (!isset($_SESSION['coupon'])) {
+            return 0;
+        }
+
+        $coupon = $_SESSION['coupon'];
+        $type = $coupon['type'];
+        $value = $coupon['value'];
+
+        if ($type === 'percentage') {
+            return $grand_total * ($value / 100);
+        } elseif ($type === 'flat') {
+            return min($grand_total, $value);
+        }
+        return 0;
+    }
+
+    private function getCartCount()
+    {
+        if (!isset($_SESSION['cart'])) {
+            return 0;
+        }
+        $count = 0;
+        foreach ($_SESSION['cart'] as $item) {
+            $count += $item['quantity'];
+        }
+        return $count;
+    }
+
     public function checkout()
     {
         include 'app/views/product/checkout.php';
@@ -351,34 +533,42 @@ class ProductController
             $phone = trim($_POST['phone'] ?? '');
             $address = trim($_POST['address'] ?? '');
 
-            // Validate form input
             if (empty($name) || empty($phone) || empty($address)) {
                 $_SESSION['error_msg'] = "Vui lòng điền đầy đủ họ tên, số điện thoại và địa chỉ nhận hàng.";
                 header('Location: ' . BASE_URL . '/Product/checkout');
                 exit();
             }
 
-            // Check if cart is empty
             if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
                 $_SESSION['error_msg'] = "Giỏ hàng của bạn đang trống.";
                 header('Location: ' . BASE_URL . '/Product/cart');
                 exit();
             }
 
-            // Start database transaction
             $this->db->beginTransaction();
 
             try {
-                // 1. Insert order record into orders table
-                $query = "INSERT INTO orders (name, phone, address) VALUES (:name, :phone, :address)";
+                $grand_total = 0;
+                foreach ($_SESSION['cart'] as $item) {
+                    $grand_total += $item['price'] * $item['quantity'];
+                }
+
+                $coupon_code = isset($_SESSION['coupon']) ? $_SESSION['coupon']['code'] : null;
+                $discount_amount = $this->calculateDiscount($grand_total);
+                $total_amount = max(0, $grand_total - $discount_amount);
+
+                $query = "INSERT INTO orders (name, phone, address, coupon_code, discount_amount, total_amount) 
+                          VALUES (:name, :phone, :address, :coupon_code, :discount_amount, :total_amount)";
                 $stmt = $this->db->prepare($query);
                 $stmt->bindParam(':name', $name);
                 $stmt->bindParam(':phone', $phone);
                 $stmt->bindParam(':address', $address);
+                $stmt->bindParam(':coupon_code', $coupon_code);
+                $stmt->bindParam(':discount_amount', $discount_amount);
+                $stmt->bindParam(':total_amount', $total_amount);
                 $stmt->execute();
                 $order_id = $this->db->lastInsertId();
 
-                // 2. Insert detail records into order_details table
                 $cart = $_SESSION['cart'];
                 foreach ($cart as $product_id => $item) {
                     $query = "INSERT INTO order_details (order_id, product_id, quantity, price) VALUES (:order_id, :product_id, :quantity, :price)";
@@ -388,19 +578,33 @@ class ProductController
                     $stmt->bindParam(':quantity', $item['quantity']);
                     $stmt->bindParam(':price', $item['price']);
                     $stmt->execute();
+
+                    $deductQuery = "UPDATE product SET stock = stock - :quantity WHERE id = :id";
+                    $deductStmt = $this->db->prepare($deductQuery);
+                    $deductStmt->bindParam(':quantity', $item['quantity']);
+                    $deductStmt->bindParam(':id', $product_id);
+                    $deductStmt->execute();
                 }
 
-                // 3. Clear shopping cart session
-                unset($_SESSION['cart']);
+                $_SESSION['last_order_id'] = $order_id;
+                $_SESSION['last_order_details'] = [
+                    'name' => $name,
+                    'phone' => $phone,
+                    'address' => $address,
+                    'coupon_code' => $coupon_code,
+                    'discount_amount' => $discount_amount,
+                    'total_amount' => $total_amount,
+                    'items' => $cart
+                ];
 
-                // Commit transaction
+                unset($_SESSION['cart']);
+                unset($_SESSION['coupon']);
+
                 $this->db->commit();
 
-                // Redirect to success confirmation page
                 header('Location: ' . BASE_URL . '/Product/orderConfirmation');
                 exit();
             } catch (Exception $e) {
-                // Rollback transaction on failure
                 $this->db->rollBack();
                 $_SESSION['error_msg'] = "Đã xảy ra lỗi khi xử lý đơn hàng: " . $e->getMessage();
                 header('Location: ' . BASE_URL . '/Product/checkout');

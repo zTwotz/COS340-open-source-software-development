@@ -87,6 +87,24 @@ try {
         echo "Seeded product ID $id successfully.\n";
     }
 
+    // 7. Add coupon_code column if it doesn't exist
+    if (!columnExists($db, 'orders', 'coupon_code')) {
+        $db->exec("ALTER TABLE orders ADD COLUMN coupon_code VARCHAR(50) DEFAULT NULL AFTER address");
+        echo "Added column 'coupon_code' to orders table.\n";
+    }
+
+    // 8. Add discount_amount column if it doesn't exist
+    if (!columnExists($db, 'orders', 'discount_amount')) {
+        $db->exec("ALTER TABLE orders ADD COLUMN discount_amount DECIMAL(10, 2) DEFAULT 0.00 AFTER coupon_code");
+        echo "Added column 'discount_amount' to orders table.\n";
+    }
+
+    // 9. Add total_amount column if it doesn't exist
+    if (!columnExists($db, 'orders', 'total_amount')) {
+        $db->exec("ALTER TABLE orders ADD COLUMN total_amount DECIMAL(10, 2) DEFAULT 0.00 AFTER discount_amount");
+        echo "Added column 'total_amount' to orders table.\n";
+    }
+
     echo "Migration completed successfully!\n";
 
 } catch (Exception $e) {

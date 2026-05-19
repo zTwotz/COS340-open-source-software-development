@@ -20,6 +20,75 @@
             const savedTheme = localStorage.getItem('theme') || 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
         })();
+
+        // Global Socket Manager for managing WebSocket connections across logins/logouts
+        const SocketManager = {
+            socket: null,
+            
+            // Connect to WebSocket server using the provided token or session ID
+            connect(token) {
+                // If there's an existing socket connection, disconnect it first
+                this.disconnect();
+                
+                if (!token) {
+                    token = localStorage.getItem('jwtToken');
+                }
+                
+                // Connect to WebSocket server
+                const wsUrl = `ws://localhost:8080/ws?token=${encodeURIComponent(token || '')}`;
+                
+                try {
+                    console.log("[SocketManager] Initiating connection for token:", token ? "TokenPresent" : "NoToken");
+                    this.socket = new WebSocket(wsUrl);
+                    
+                    this.socket.onopen = () => {
+                        console.log("[SocketManager] WebSocket connection established successfully.");
+                        sessionStorage.setItem('activeSocketSession', 'true');
+                    };
+                    
+                    this.socket.onmessage = (event) => {
+                        console.log("[SocketManager] Received message:", event.data);
+                    };
+                    
+                    this.socket.onerror = (error) => {
+                        console.error("[SocketManager] WebSocket error:", error);
+                    };
+                    
+                    this.socket.onclose = (event) => {
+                        console.log("[SocketManager] WebSocket connection closed:", event.reason);
+                        sessionStorage.removeItem('activeSocketSession');
+                    };
+                    
+                } catch (e) {
+                    console.error("[SocketManager] Failed to create WebSocket connection:", e);
+                }
+            },
+            
+            // Disconnect and clean up the current socket connection
+            disconnect() {
+                if (this.socket) {
+                    console.log("[SocketManager] Disconnecting active WebSocket connection.");
+                    this.socket.onopen = null;
+                    this.socket.onmessage = null;
+                    this.socket.onerror = null;
+                    this.socket.onclose = null;
+                    
+                    if (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING) {
+                        this.socket.close();
+                    }
+                    this.socket = null;
+                }
+                sessionStorage.removeItem('activeSocketSession');
+                localStorage.removeItem('activeSocketId');
+            },
+
+            // Completely clear all socket session traces
+            clearSocketSession() {
+                console.log("[SocketManager] Clearing current socket session resources.");
+                this.disconnect();
+                localStorage.removeItem('activeSocketId');
+            }
+        };
     </script>
     
     <style>
@@ -486,9 +555,19 @@
     ?>
 
     <script>
-        // Clear JWT token in localStorage if user is not logged in in PHP Session
+        // Clear JWT token and socket session if user is not logged in in PHP Session
         if (!<?php echo $isLoggedIn ? 'true' : 'false'; ?>) {
             localStorage.removeItem('jwtToken');
+            if (typeof SocketManager !== 'undefined') {
+                SocketManager.clearSocketSession();
+            }
+        } else {
+            // Automatically initialize/restore socket connection when logged in
+            document.addEventListener('DOMContentLoaded', () => {
+                if (typeof SocketManager !== 'undefined') {
+                    SocketManager.connect();
+                }
+            });
         }
     </script>
 
@@ -537,7 +616,7 @@
                                 <span class="badge bg-warning text-dark" style="font-size: 9px; padding: 2px 6px; border-radius: 4px;">Admin</span>
                             <?php endif; ?>
                         </div>
-                        <a href="<?php echo BASE_URL; ?>/account/logout" class="btn btn-outline-light border-0 nav-link p-2" title="Đăng xuất">
+                        <a href="<?php echo BASE_URL; ?>/account/logout" onclick="if (typeof SocketManager !== 'undefined') SocketManager.clearSocketSession();" class="btn btn-outline-light border-0 nav-link p-2" title="Đăng xuất">
                             <i class="fa-solid fa-right-from-bracket"></i>
                         </a>
                     <?php else: ?>
