@@ -129,6 +129,18 @@ Nếu thông số MySQL của bạn khác với mặc định của Laragon (Use
    - **Mật khẩu**: `123456`
 4. Trải nghiệm đầy đủ tính năng Thêm/Sửa/Xóa sản phẩm bằng AJAX Fetch API, Quản lý danh mục, Thêm vào giỏ hàng và Đặt hàng lưu trữ dữ liệu vào CSDL thời gian thực!
 
+### Bước 5: Sao lưu / Cập nhật dữ liệu từ CSDL vào file `database.sql`
+Khi bạn thêm sản phẩm hoặc thay đổi cấu trúc bảng trên giao diện web và muốn lưu lại trạng thái dữ liệu mới nhất vào file `database.sql` trong dự án để đẩy lên GitHub, hãy mở Terminal/PowerShell và chạy lệnh:
+- **Nếu đang ở thư mục gốc của repository (`D:\laragon\www\4851_NguyenNgocTinh_PTPM_MNM`):**
+  ```powershell
+  & "D:\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqldump.exe" -u root my_store > 4851_NguyenNgocTinh_WebsiteBanHang\database.sql
+  ```
+- **Nếu đang ở trong thư mục dự án (`D:\laragon\www\4851_NguyenNgocTinh_PTPM_MNM\4851_NguyenNgocTinh_WebsiteBanHang`):**
+  ```powershell
+  & "D:\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqldump.exe" -u root my_store > database.sql
+  ```
+*(Thay thế `"D:\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqldump.exe"` bằng đường dẫn thực tế đến file `mysqldump.exe` trong thư mục cài đặt Laragon của bạn nếu có sự thay đổi).*
+
 ---
 
 ## 📈 Danh sách các API Endpoints (RESTful APIs)

@@ -74,7 +74,7 @@ class AccountController {
         unset($_SESSION['cart']);
         unset($_SESSION['coupon']);
         $_SESSION['success_msg'] = "Bạn đã đăng xuất thành công!";
-        header('Location: ' . BASE_URL . '/product');
+        header('Location: ' . BASE_URL . '/');
         exit();
     }
 
