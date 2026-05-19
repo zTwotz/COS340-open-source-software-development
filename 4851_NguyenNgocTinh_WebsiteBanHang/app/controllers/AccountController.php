@@ -99,7 +99,7 @@ class AccountController {
             $_SESSION['user_role'] = $user->role;
             $_SESSION['user_fullname'] = $user->fullname;
             $_SESSION['success_msg'] = "Đăng nhập thành công! Chào mừng " . htmlspecialchars($user->fullname, ENT_QUOTES, 'UTF-8');
-            header('Location: ' . BASE_URL . '/Product');
+            header('Location: ' . BASE_URL . '/');
             exit();
         } else {
             $_SESSION['error_msg'] = "Tên đăng nhập hoặc mật khẩu không đúng!";
