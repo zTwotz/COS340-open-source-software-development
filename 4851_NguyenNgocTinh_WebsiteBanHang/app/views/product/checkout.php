@@ -70,9 +70,31 @@
                                     <div class="text-white fw-medium"><?php echo number_format($subtotal, 0, ',', '.'); ?> VND</div>
                                 </div>
                             <?php endforeach; ?>
-                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2">
-                                <h6 class="text-white fw-bold mb-0">Tổng cộng:</h6>
-                                <h5 class="text-success fw-bold mb-0" style="color: #30d158 !important;"><?php echo number_format($total, 0, ',', '.'); ?> VND</h5>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="text-muted">Tạm tính:</div>
+                                <div class="text-white fw-medium"><?php echo number_format($total, 0, ',', '.'); ?> VND</div>
+                            </div>
+
+                            <?php 
+                            $discount = 0;
+                            if (isset($_SESSION['coupon'])): 
+                                $coupon = $_SESSION['coupon'];
+                                if ($coupon['type'] === 'percentage') {
+                                    $discount = $total * ($coupon['value'] / 100);
+                                } else {
+                                    $discount = min($total, $coupon['value']);
+                                }
+                            ?>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <div class="text-muted">Giảm giá <span class="badge bg-success text-white ms-1 fw-bold"><?php echo htmlspecialchars($coupon['code']); ?></span>:</div>
+                                    <div class="text-danger fw-bold">-<?php echo number_format($discount, 0, ',', '.'); ?> VND</div>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-secondary border-opacity-20">
+                                <h6 class="text-white fw-bold mb-0">Tổng thanh toán:</h6>
+                                <h5 class="text-success fw-bold mb-0" style="color: #30d158 !important;"><?php echo number_format(max(0, $total - $discount), 0, ',', '.'); ?> VND</h5>
                             </div>
                         <?php else: ?>
                             <p class="text-muted mb-0">Không có sản phẩm nào trong giỏ hàng.</p>
