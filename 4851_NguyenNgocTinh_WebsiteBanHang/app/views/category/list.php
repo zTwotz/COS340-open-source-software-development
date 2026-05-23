@@ -43,7 +43,11 @@
                                     <a href="<?php echo BASE_URL; ?>/Category/edit/<?php echo $category->id; ?>" class="btn btn-sm btn-premium-warning" title="Sửa">
                                         <i class="fa-solid fa-pen"></i>
                                     </a>
-                                    <?php if ((int)($category->product_count ?? 0) === 0): ?>
+                                    <?php if ((int)($category->product_count ?? 0) > 0): ?>
+                                        <button class="btn btn-sm btn-premium-danger" style="opacity: 0.4; cursor: not-allowed;" title="Không thể xóa danh mục này vì đang có sản phẩm" disabled>
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    <?php else: ?>
                                         <button onclick="confirmDelete('<?php echo $category->id; ?>', '<?php echo htmlspecialchars($category->name, ENT_QUOTES, 'UTF-8'); ?>', 0)" class="btn btn-sm btn-premium-danger" title="Xóa">
                                             <i class="fa-solid fa-trash-can"></i>
                                         </button>
