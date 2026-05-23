@@ -11,7 +11,11 @@ class CategoryModel
 
     public function getCategories()
     {
-        $query = "SELECT id, name, description FROM " . $this->table_name . " ORDER BY name ASC";
+        $query = "SELECT c.id, c.name, c.description, COUNT(p.id) AS product_count 
+                  FROM " . $this->table_name . " c 
+                  LEFT JOIN product p ON c.id = p.category_id 
+                  GROUP BY c.id, c.name, c.description 
+                  ORDER BY c.name ASC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         $result = $stmt->fetchAll(PDO::FETCH_OBJ);

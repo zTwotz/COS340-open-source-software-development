@@ -157,7 +157,7 @@ $final_total = max(0, $grand_total - $discount_amount);
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <div class="fw-bold text-white"><?php echo htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="fw-bold" style="color: var(--text-main);"><?php echo htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8'); ?></div>
                                 </td>
                                 <td>
                                     <?php echo number_format($item['price'], 0, ',', '.'); ?> VND
@@ -196,11 +196,11 @@ $final_total = max(0, $grand_total - $discount_amount);
         <!-- Checkout Card -->
         <div class="col-lg-4">
             <div class="cart-total-box">
-                <h4 class="fw-bold text-white mb-4"><i class="fa-solid fa-file-invoice-dollar me-2 text-primary"></i>Tổng đơn hàng</h4>
+                <h4 class="fw-bold mb-4" style="color: var(--text-main);"><i class="fa-solid fa-file-invoice-dollar me-2 text-primary"></i>Tổng đơn hàng</h4>
                 
                 <div class="d-flex justify-content-between mb-3">
                     <span class="text-muted">Tạm tính:</span>
-                    <span class="text-white fw-bold" id="grand-total-text"><?php echo number_format($grand_total, 0, ',', '.'); ?> VND</span>
+                    <span class="fw-bold" id="grand-total-text" style="color: var(--text-main);"><?php echo number_format($grand_total, 0, ',', '.'); ?> VND</span>
                 </div>
 
                 <!-- Discount row -->
@@ -217,13 +217,13 @@ $final_total = max(0, $grand_total - $discount_amount);
                 <hr style="border-color: var(--glass-border);">
                 
                 <div class="d-flex justify-content-between mb-4">
-                    <span class="fs-5 fw-bold text-white">Tổng cộng:</span>
+                    <span class="fs-5 fw-bold" style="color: var(--text-main);">Tổng cộng:</span>
                     <span class="fs-4 fw-bold text-success" id="final-total-text"><?php echo number_format($final_total, 0, ',', '.'); ?> VND</span>
                 </div>
 
                 <!-- Coupon Section -->
                 <div class="coupon-box mt-3 mb-4 p-3 rounded-3" style="background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--glass-border);">
-                    <h6 class="text-white mb-2 fw-semibold"><i class="fa-solid fa-ticket me-2 text-warning"></i>Mã giảm giá (Coupon)</h6>
+                    <h6 class="mb-2 fw-semibold" style="color: var(--text-main);"><i class="fa-solid fa-ticket me-2 text-warning"></i>Mã giảm giá (Coupon)</h6>
                     
                     <div class="input-group mb-2" id="coupon-input-group" style="<?php echo isset($_SESSION['coupon']) ? 'display: none;' : '' ?>">
                         <input type="text" id="coupon-code-input" class="form-control form-control-glass border-end-0" placeholder="Ví dụ: NTECH10, GIARE" style="height: 38px; font-size: 13px;">

@@ -2,7 +2,41 @@
 
 <!-- Custom Home Page Styles -->
 <style>
-    /* Liquid Glass Premium Homepage Styles */
+    /* Theme-specific variables for homepage banners */
+    :root {
+        --carousel-bg-1: #161617;
+        --carousel-bg-2: #252527;
+        --carousel-bg-3: #0d0d0d;
+        --carousel-text: #ffffff;
+        --carousel-text-muted: #cccccc;
+        
+        --deal-bg: #272729;
+        --deal-border: rgba(255, 255, 255, 0.08);
+        --deal-title: #ffffff;
+        --deal-desc: #cccccc;
+        --deal-countdown-bg: rgba(255, 255, 255, 0.03);
+        --deal-countdown-border: rgba(255, 255, 255, 0.08);
+        --deal-benefit-title: #ffffff;
+        --countdown-separator-color: rgba(255, 255, 255, 0.2);
+    }
+    [data-theme="light"] {
+        --carousel-bg-1: #fafafc;
+        --carousel-bg-2: #f5f5f7;
+        --carousel-bg-3: #ffffff;
+        --carousel-text: #1d1d1f;
+        --carousel-text-muted: #7a7a7a;
+        
+        --deal-bg: #f5f5f7;
+        --deal-border: #e0e0e0;
+        --deal-title: #1d1d1f;
+        --deal-desc: #7a7a7a;
+        --deal-countdown-bg: rgba(0, 0, 0, 0.03);
+        --deal-countdown-border: rgba(0, 0, 0, 0.06);
+        --deal-benefit-title: #1d1d1f;
+        --countdown-separator-color: rgba(0, 0, 0, 0.15);
+    }
+
+    /* Apple Design System Premium Homepage Styles */
     .hero-carousel {
         border-radius: 24px;
         overflow: hidden;
@@ -15,14 +49,14 @@
         height: 480px;
         position: relative;
     }
-    .carousel-bg-grad-1 {
-        background: linear-gradient(135deg, #1f1c2c 0%, #928dab 100%);
+    .carousel-bg-dark-1 {
+        background: var(--carousel-bg-1);
     }
-    .carousel-bg-grad-2 {
-        background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+    .carousel-bg-light-2 {
+        background: var(--carousel-bg-2);
     }
-    .carousel-bg-grad-3 {
-        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    .carousel-bg-dark-3 {
+        background: var(--carousel-bg-3);
     }
     .carousel-overlay {
         position: absolute;
@@ -30,11 +64,10 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: radial-gradient(circle at 70% 50%, transparent 20%, rgba(0, 0, 0, 0.7) 80%);
         display: flex;
         align-items: center;
         padding: 4rem;
-        color: #ffffff;
+        color: var(--carousel-text);
     }
     .carousel-product-img {
         position: absolute;
@@ -44,87 +77,73 @@
         height: 80%;
         max-width: 45%;
         object-fit: contain;
-        filter: drop-shadow(0 25px 50px rgba(0,0,0,0.65));
+        /* Apple signature product drop-shadow */
+        filter: drop-shadow(rgba(0, 0, 0, 0.22) 3px 5px 30px);
         transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .carousel-item.active .carousel-product-img {
-        transform: translateY(-50%) scale(1.05) rotate(-2deg);
+        transform: translateY(-50%) scale(1.03);
     }
     .carousel-glass-content {
         max-width: 50%;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 2.5rem;
-        border-radius: 20px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        background: transparent;
+        border: none;
+        padding: 0;
+        border-radius: 0;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
     }
     .carousel-glass-content h2 {
         font-family: var(--font-display);
-        font-weight: 700;
-        font-size: 2.5rem;
+        font-weight: 600;
+        font-size: 2.8rem;
         margin-bottom: 1rem;
-        background: linear-gradient(180deg, #ffffff 0%, #d1d1d6 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        letter-spacing: -0.02em;
+        color: var(--carousel-text);
     }
     .carousel-glass-content p {
-        font-size: 1.1rem;
-        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.15rem;
         margin-bottom: 1.5rem;
+        line-height: 1.47;
+        color: var(--carousel-text-muted);
     }
     
     /* Category Shortcut Section */
     .section-title {
         font-family: var(--font-display);
-        font-weight: 700;
+        font-weight: 600;
         font-size: 2rem;
-        letter-spacing: -0.5px;
-        margin-bottom: 1.5rem;
+        letter-spacing: -0.01em;
+        margin-bottom: 2rem;
         position: relative;
         display: inline-block;
-    }
-    .section-title::after {
-        content: '';
-        position: absolute;
-        left: 0;
-        bottom: -6px;
-        width: 40px;
-        height: 4px;
-        background: var(--accent-color);
-        border-radius: 2px;
-        box-shadow: 0 0 10px var(--accent-color);
     }
     .category-shortcut-card {
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
-        border-radius: 20px;
+        border-radius: 18px; /* rounded.lg */
         padding: 1.5rem;
         text-align: center;
-        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.2s ease;
         text-decoration: none;
         color: var(--text-main);
         display: block;
-        box-shadow: var(--glass-shadow);
+        box-shadow: none;
     }
     .category-shortcut-card:hover {
-        transform: translateY(-8px);
+        transform: translateY(-4px);
         background: var(--card-hover-bg);
-        border-color: var(--accent-color);
-        box-shadow: 0 12px 30px rgba(0, 113, 227, 0.2);
     }
     .category-icon {
         font-size: 2.5rem;
         margin-bottom: 1rem;
-        background: linear-gradient(135deg, var(--accent-color), #2997ff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: var(--accent-color);
         display: inline-block;
         transition: transform 0.4s ease;
     }
     .category-shortcut-card:hover .category-icon {
-        transform: scale(1.15) rotate(5deg);
+        transform: scale(1.08);
     }
     .category-shortcut-card h4 {
         font-size: 1.1rem;
@@ -132,34 +151,31 @@
         margin: 0;
     }
 
-    /* Product Grid Card Styling */
+    /* Product Grid Card Styling (Store Utility Card) */
     .product-grid-card {
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
-        border-radius: 24px;
+        border-radius: 18px; /* rounded.lg */
+        padding: 24px; /* spacing.lg */
         overflow: hidden;
-        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.2s ease;
         height: 100%;
         display: flex;
         flex-direction: column;
         position: relative;
-        box-shadow: var(--glass-shadow);
+        box-shadow: none; /* No shadow on cards */
     }
     .product-grid-card:hover {
-        transform: translateY(-8px) scale(1.01);
+        transform: translateY(-4px);
         background: var(--card-hover-bg);
-        border-color: rgba(255, 255, 255, 0.15);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-    }
-    [data-theme="light"] .product-grid-card:hover {
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
     }
     .product-img-wrapper {
         position: relative;
         padding-top: 100%;
-        background: rgba(255, 255, 255, 0.02);
+        background: transparent;
         overflow: hidden;
-        border-bottom: 1px solid var(--glass-border);
+        border-radius: 8px; /* rounded.sm for inner image */
+        margin-bottom: 16px;
     }
     .product-grid-img {
         position: absolute;
@@ -167,11 +183,14 @@
         left: 0;
         width: 100%;
         height: 100%;
-        object-fit: cover;
-        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        object-fit: contain;
+        border-radius: 8px;
+        /* Apple signature product shadow */
+        filter: drop-shadow(rgba(0, 0, 0, 0.22) 3px 5px 30px);
+        transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     }
     .product-grid-card:hover .product-grid-img {
-        transform: scale(1.08);
+        transform: scale(1.03);
     }
     .product-badge {
         position: absolute;
@@ -179,32 +198,40 @@
         left: 16px;
         z-index: 10;
         padding: 6px 14px;
-        border-radius: 30px;
+        border-radius: 980px; /* rounded.pill */
         font-size: 0.75rem;
-        font-weight: 700;
+        font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
     .badge-featured {
-        background: rgba(0, 113, 227, 0.2);
+        background: rgba(0, 102, 204, 0.1);
         color: #2997ff;
-        border: 1px solid rgba(0, 113, 227, 0.4);
+        border: 1px solid rgba(0, 102, 204, 0.3);
+    }
+    [data-theme="light"] .badge-featured {
+        background: rgba(0, 102, 204, 0.05);
+        color: #0066cc;
+        border: 1px solid rgba(0, 102, 204, 0.2);
     }
     .badge-deal {
-        background: rgba(255, 45, 85, 0.2);
-        color: #ff375f;
-        border: 1px solid rgba(255, 45, 85, 0.4);
+        background: rgba(255, 69, 58, 0.1);
+        color: #ff453a;
+        border: 1px solid rgba(255, 69, 58, 0.3);
     }
     .badge-new {
-        background: rgba(52, 199, 89, 0.2);
+        background: rgba(48, 209, 88, 0.1);
         color: #30d158;
-        border: 1px solid rgba(52, 199, 89, 0.4);
+        border: 1px solid rgba(48, 209, 88, 0.3);
+    }
+    [data-theme="light"] .badge-new {
+        background: rgba(48, 209, 88, 0.05);
+        color: #30d158;
+        border: 1px solid rgba(48, 209, 88, 0.2);
     }
     .product-card-body {
-        padding: 1.5rem;
+        padding: 0;
         display: flex;
         flex-direction: column;
         flex-grow: 1;
@@ -218,9 +245,10 @@
         letter-spacing: 0.5px;
     }
     .product-title {
-        font-size: 1.15rem;
+        font-family: var(--font-text);
+        font-size: 17px; /* body-strong */
         font-weight: 600;
-        line-height: 1.4;
+        line-height: 1.24;
         margin-bottom: 0.75rem;
         color: var(--text-main);
         text-decoration: none;
@@ -228,7 +256,7 @@
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
-        height: 2.8em;
+        height: 2.5em;
     }
     .product-title:hover {
         color: var(--accent-color);
@@ -241,78 +269,60 @@
         margin-bottom: 1rem;
     }
     .current-price {
-        font-size: 1.35rem;
-        font-weight: 700;
-        color: var(--accent-color);
+        font-size: 17px;
+        font-weight: 600;
+        color: #30d158; /* Apple green for dark mode */
+    }
+    [data-theme="light"] .current-price {
+        color: var(--ink); /* Ink for light mode */
     }
     .original-price {
-        font-size: 0.95rem;
+        font-size: 14px;
         text-decoration: line-through;
         color: var(--text-muted);
     }
     .stock-status {
-        font-size: 0.8rem;
+        font-size: 14px;
         margin-bottom: 1rem;
         display: flex;
         align-items: center;
         gap: 6px;
     }
     .btn-buy-now {
-        border-radius: 12px;
-        padding: 10px;
-        font-weight: 600;
+        border-radius: 980px; /* rounded.pill */
+        padding: 11px 22px;
+        font-size: 14px;
+        font-weight: 400;
         width: 100%;
         background: var(--accent-color);
-        color: #ffffff;
+        color: #ffffff !important;
         border: none;
-        transition: all 0.3s ease;
-        display: flex;
+        transition: opacity 0.15s ease, transform 0.1s ease;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
         text-decoration: none;
     }
     .btn-buy-now:hover {
-        background: var(--accent-hover);
-        box-shadow: 0 0 15px rgba(0, 113, 227, 0.4);
-        color: #ffffff;
+        opacity: 0.88;
+        color: #ffffff !important;
     }
-
+    .btn-buy-now:active {
+        transform: scale(0.95);
+    }
+ 
     /* Hot Deal Special Section Banner */
     .deal-banner {
-        background: linear-gradient(135deg, rgba(20, 20, 25, 0.85) 0%, rgba(10, 10, 12, 0.95) 100%);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 32px;
+        background: var(--deal-bg);
+        border: 1px solid var(--deal-border);
+        border-radius: 28px;
         padding: 3.5rem;
         margin-bottom: 4rem;
-        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        box-shadow: none;
         position: relative;
         overflow: hidden;
-    }
-    .deal-banner::before {
-        content: '';
-        position: absolute;
-        top: -20%;
-        left: -10%;
-        width: 450px;
-        height: 450px;
-        background: radial-gradient(circle, rgba(255, 69, 58, 0.15) 0%, transparent 70%);
-        z-index: 1;
-        pointer-events: none;
-        filter: blur(30px);
-    }
-    .deal-banner::after {
-        content: '';
-        position: absolute;
-        bottom: -30%;
-        right: -10%;
-        width: 450px;
-        height: 450px;
-        background: radial-gradient(circle, rgba(0, 113, 227, 0.12) 0%, transparent 70%);
-        z-index: 1;
-        pointer-events: none;
-        filter: blur(30px);
+        transition: background-color 0.3s, border-color 0.3s;
     }
     .deal-content {
         position: relative;
@@ -332,42 +342,27 @@
         letter-spacing: 1px;
         text-transform: uppercase;
         margin-bottom: 1.5rem;
-        box-shadow: 0 4px 20px rgba(255, 69, 58, 0.15);
-        animation: pulse-glow 2s infinite;
-    }
-    @keyframes pulse-glow {
-        0% {
-            box-shadow: 0 0 0 0 rgba(255, 69, 58, 0.4);
-        }
-        70% {
-            box-shadow: 0 0 0 10px rgba(255, 69, 58, 0);
-        }
-        100% {
-            box-shadow: 0 0 0 0 rgba(255, 69, 58, 0);
-        }
     }
     .deal-title {
         font-family: var(--font-display), -apple-system, sans-serif;
-        font-weight: 800;
+        font-weight: 600;
         font-size: 2.8rem;
         line-height: 1.2;
-        background: linear-gradient(135deg, #ffffff 40%, #a1a1a6 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: var(--deal-title);
         margin-bottom: 1rem;
         letter-spacing: -1px;
+        transition: color 0.3s;
     }
     .deal-title span {
-        background: linear-gradient(135deg, #ff453a 0%, #ff9f0a 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #ff453a;
     }
     .deal-description {
-        color: #e8e8ed;
+        color: var(--deal-desc);
         font-size: 1.1rem;
         line-height: 1.6;
         max-width: 90%;
         margin-bottom: 2rem;
+        transition: color 0.3s;
     }
     .countdown-timer {
         display: flex;
@@ -376,40 +371,26 @@
         margin-top: 1.5rem;
     }
     .countdown-block {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 20px;
+        background: var(--deal-countdown-bg);
+        border: 1px solid var(--deal-countdown-border);
+        border-radius: 18px;
         padding: 1.25rem 0.75rem;
         min-width: 95px;
         text-align: center;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
+        box-shadow: none;
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
     }
     .countdown-block:hover {
-        transform: translateY(-4px);
+        transform: translateY(-2px);
         border-color: rgba(255, 69, 58, 0.3);
-        box-shadow: 0 15px 35px rgba(255, 69, 58, 0.15);
-    }
-    .countdown-block::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 50%;
-        background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%);
-        pointer-events: none;
     }
     .countdown-num {
-        font-family: 'Outfit', -apple-system, sans-serif;
+        font-family: var(--font-display), -apple-system, sans-serif;
         font-size: 2.5rem;
-        font-weight: 800;
-        background: linear-gradient(180deg, #ff453a 0%, #ff9f0a 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        font-weight: 600;
+        color: #ff453a;
         line-height: 1;
         margin-bottom: 6px;
         letter-spacing: -1px;
@@ -424,9 +405,10 @@
     .countdown-separator {
         font-size: 2rem;
         font-weight: 700;
-        color: rgba(255, 255, 255, 0.2);
+        color: var(--countdown-separator-color);
         animation: blink 1s infinite;
         margin-bottom: 22px;
+        transition: color 0.3s;
     }
     @keyframes blink {
         0%, 100% { opacity: 1; }
@@ -436,8 +418,9 @@
         display: flex;
         gap: 24px;
         margin-top: 2.5rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        border-top: 1px solid var(--deal-border);
         padding-top: 1.5rem;
+        transition: border-color 0.3s;
     }
     .benefit-item {
         flex: 1;
@@ -455,14 +438,14 @@
         align-items: center;
         justify-content: center;
         margin-bottom: 0.75rem;
-        box-shadow: 0 4px 12px rgba(255, 69, 58, 0.15);
         font-size: 0.95rem;
     }
     .benefit-title {
         font-size: 0.85rem;
         font-weight: 600;
-        color: #ffffff;
+        color: var(--deal-benefit-title);
         margin-bottom: 2px;
+        transition: color 0.3s;
     }
     .benefit-desc {
         font-size: 0.75rem;
@@ -481,33 +464,33 @@
             <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
         </div>
         <div class="carousel-inner">
-            <div class="carousel-item active carousel-bg-grad-1">
+            <div class="carousel-item active carousel-bg-dark-1">
                 <img src="<?= BASE_URL ?>/public/uploads/iphone_15_pro_max.png" class="carousel-product-img" alt="iPhone 15 Pro Max">
-                <div class="carousel-overlay">
+                <div class="carousel-overlay overlay-dark">
                     <div class="carousel-glass-content">
                         <h2>iPhone 15 Pro Max</h2>
                         <p>Thiết kế Titanium bền bỉ, chip A17 Pro mạnh mẽ vượt trội và hệ thống camera đỉnh cao mới nhất.</p>
-                        <a href="<?= BASE_URL ?>/Product/addToCart/1" class="btn btn-primary btn-lg rounded-pill px-4">Thêm vào giỏ hàng</a>
+                        <a href="<?= BASE_URL ?>/Product/addToCart/1" class="btn btn-premium">Thêm vào giỏ hàng</a>
                     </div>
                 </div>
             </div>
-            <div class="carousel-item carousel-bg-grad-2">
+            <div class="carousel-item carousel-bg-light-2">
                 <img src="<?= BASE_URL ?>/public/uploads/macbook_air_m2.png" class="carousel-product-img" alt="Macbook Air M2">
-                <div class="carousel-overlay">
+                <div class="carousel-overlay overlay-light">
                     <div class="carousel-glass-content">
                         <h2>MacBook Air M2</h2>
                         <p>Siêu mỏng nhẹ, hiệu năng cực đỉnh từ chip Apple M2 cùng thời lượng pin lên đến 18 giờ liên tục.</p>
-                        <a href="<?= BASE_URL ?>/Product/show/2" class="btn btn-primary btn-lg rounded-pill px-4">Khám Phá</a>
+                        <a href="<?= BASE_URL ?>/Product/show/2" class="btn btn-premium">Khám Phá</a>
                     </div>
                 </div>
             </div>
-            <div class="carousel-item carousel-bg-grad-3">
+            <div class="carousel-item carousel-bg-dark-3">
                 <img src="<?= BASE_URL ?>/public/uploads/ipad_air_5.png" class="carousel-product-img" alt="iPad Air 5">
-                <div class="carousel-overlay">
+                <div class="carousel-overlay overlay-dark">
                     <div class="carousel-glass-content">
                         <h2>iPad Air M1</h2>
                         <p>Hiệu năng mạnh mẽ ấn tượng từ vi xử lý M1, màn hình Liquid Retina sắc nét hỗ trợ Apple Pencil.</p>
-                        <a href="<?= BASE_URL ?>/Product/addToCart/4" class="btn btn-primary btn-lg rounded-pill px-4">Thêm vào giỏ hàng</a>
+                        <a href="<?= BASE_URL ?>/Product/addToCart/4" class="btn btn-premium">Thêm vào giỏ hàng</a>
                     </div>
                 </div>
             </div>

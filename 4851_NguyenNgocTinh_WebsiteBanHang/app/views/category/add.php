@@ -29,7 +29,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="<?php echo BASE_URL; ?>/Category/list" class="text-muted text-decoration-none">Danh mục</a></li>
-                <li class="breadcrumb-item active text-white" aria-current="page">Thêm danh mục</li>
+                <li class="breadcrumb-item active" style="color: var(--text-main);" aria-current="page">Thêm danh mục</li>
             </ol>
         </nav>
     </div>

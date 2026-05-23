@@ -4,64 +4,72 @@
     .product-card {
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
-        border-radius: 16px;
-        overflow: hidden;
-        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease;
+        border-radius: 18px; /* rounded.lg */
+        padding: 24px; /* spacing.lg */
+        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.2s ease;
         height: 100%;
         display: flex;
         flex-direction: column;
+        box-shadow: none; /* No shadow on card by default */
     }
 
     .product-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+        transform: translateY(-4px);
+        background: var(--card-hover-bg);
+    }
+
+    .product-card-img-wrapper {
+        border-radius: 8px; /* rounded.sm */
+        overflow: hidden;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        margin-bottom: 12px;
     }
 
     .product-card-img {
-        width: 100%;
-        height: 220px;
+        max-width: 100%;
+        max-height: 100%;
         object-fit: contain;
-        background: rgba(255, 255, 255, 0.02);
-        padding: 1.5rem;
-        border-bottom: 1px solid var(--glass-border);
+        border-radius: 8px;
+        /* Signature product shadow under the product render resting on a surface */
+        filter: drop-shadow(rgba(0, 0, 0, 0.22) 3px 5px 30px);
         transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     .product-card:hover .product-card-img {
-        transform: scale(1.05);
-    }
-
-    .product-card-img-wrapper {
-        overflow: hidden;
-        border-radius: 16px 16px 0 0;
+        transform: scale(1.03);
     }
 
     .no-image-placeholder {
         width: 100%;
-        height: 220px;
+        height: 200px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         background: rgba(255, 255, 255, 0.02);
         color: var(--text-muted);
-        border-bottom: 1px solid var(--glass-border);
+        border-radius: 8px;
     }
 
     .product-card-body {
-        padding: 1.25rem;
+        padding: 0;
         flex: 1;
         display: flex;
         flex-direction: column;
     }
 
     .product-card-title {
-        font-family: var(--font-display);
-        font-size: 1rem;
+        font-family: var(--font-text);
+        font-size: 17px; /* body-strong */
         font-weight: 600;
         color: var(--text-main);
         margin-bottom: 0.5rem;
-        letter-spacing: -0.2px;
+        line-height: 1.24;
+        letter-spacing: -0.374px;
         overflow: hidden;
         text-overflow: ellipsis;
         display: -webkit-box;
@@ -82,11 +90,15 @@
 
     .product-card-price {
         font-family: var(--font-display);
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #30d158;
+        font-size: 17px; /* body */
+        font-weight: 600;
+        color: #30d158; /* Apple green for dark mode */
         margin-bottom: 0.75rem;
-        letter-spacing: -0.3px;
+        letter-spacing: -0.374px;
+    }
+
+    [data-theme="light"] .product-card-price {
+        color: var(--ink); /* Ink for light mode */
     }
 
     .product-card-category {
@@ -264,6 +276,47 @@
         background: #ffffff;
         color: #1d1d1f;
     }
+
+    /* Stock badge */
+    .stock-badge {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.72rem;
+        font-weight: 500;
+        padding: 3px 10px;
+        border-radius: 980px;
+        letter-spacing: 0.1px;
+    }
+    .stock-success {
+        background: rgba(48, 209, 88, 0.12);
+        color: #30d158;
+        border: 1px solid rgba(48, 209, 88, 0.25);
+    }
+    [data-theme="light"] .stock-success {
+        background: rgba(52, 199, 89, 0.1);
+        color: #1a8a3a;
+        border: 1px solid rgba(52, 199, 89, 0.25);
+    }
+    .stock-warning {
+        background: rgba(255, 159, 10, 0.12);
+        color: #ff9f0a;
+        border: 1px solid rgba(255, 159, 10, 0.25);
+    }
+    [data-theme="light"] .stock-warning {
+        background: rgba(255, 149, 0, 0.1);
+        color: #b86e00;
+        border: 1px solid rgba(255, 149, 0, 0.25);
+    }
+    .stock-danger {
+        background: rgba(255, 69, 58, 0.12);
+        color: #ff453a;
+        border: 1px solid rgba(255, 69, 58, 0.25);
+    }
+    [data-theme="light"] .stock-danger {
+        background: rgba(255, 59, 48, 0.1);
+        color: #c0392b;
+        border: 1px solid rgba(255, 59, 48, 0.25);
+    }
 </style>
 
 <!-- Page Header -->
@@ -416,6 +469,29 @@
                         </h5>
                         <div class="product-card-price">
                             <?php echo number_format($product->price, 0, ',', '.'); ?> <small style="font-size: 0.7em; font-weight: 400;">VND</small>
+                        </div>
+
+                        <!-- Stock badge -->
+                        <div class="mb-2">
+                            <?php
+                            $stock = (int)($product->stock ?? 0);
+                            if ($stock <= 0) {
+                                $stockClass = 'danger';
+                                $stockLabel = 'Hết hàng';
+                                $stockIcon = 'fa-ban';
+                            } elseif ($stock <= 5) {
+                                $stockClass = 'warning';
+                                $stockLabel = 'Sắp hết (' . $stock . ')';
+                                $stockIcon = 'fa-triangle-exclamation';
+                            } else {
+                                $stockClass = 'success';
+                                $stockLabel = 'Còn ' . $stock;
+                                $stockIcon = 'fa-check';
+                            }
+                            ?>
+                            <span class="stock-badge stock-<?php echo $stockClass; ?>">
+                                <i class="fa-solid <?php echo $stockIcon; ?> me-1"></i><?php echo $stockLabel; ?>
+                            </span>
                         </div>
 
                         <!-- Actions -->

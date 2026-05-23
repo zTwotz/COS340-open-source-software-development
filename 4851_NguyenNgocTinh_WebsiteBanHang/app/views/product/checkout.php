@@ -37,7 +37,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="<?php echo BASE_URL; ?>/Product/cart" class="text-muted text-decoration-none">Giỏ hàng</a></li>
-                <li class="breadcrumb-item active text-white" aria-current="page">Thanh toán</li>
+                <li class="breadcrumb-item active" style="color: var(--text-main);" aria-current="page">Thanh toán</li>
             </ol>
         </nav>
     </div>
@@ -57,7 +57,7 @@
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="order-summary-card">
-                        <h5 class="text-white mb-3 fw-bold"><i class="fa-solid fa-basket-shopping me-2 text-success"></i>Tóm tắt đơn hàng</h5>
+                        <h5 class="mb-3 fw-bold" style="color: var(--text-main);"><i class="fa-solid fa-basket-shopping me-2 text-success"></i>Tóm tắt đơn hàng</h5>
                         <?php if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])): ?>
                             <?php 
                             $total = 0;
@@ -67,13 +67,13 @@
                             ?>
                                 <div class="d-flex justify-content-between align-items-center mb-2 py-1 border-bottom border-secondary border-opacity-10">
                                     <div class="text-muted"><?php echo htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8'); ?> <span class="badge-premium ms-2">x<?php echo $item['quantity']; ?></span></div>
-                                    <div class="text-white fw-medium"><?php echo number_format($subtotal, 0, ',', '.'); ?> VND</div>
+                                    <div class="fw-medium" style="color: var(--text-main);"><?php echo number_format($subtotal, 0, ',', '.'); ?> VND</div>
                                 </div>
                             <?php endforeach; ?>
                             
                             <div class="d-flex justify-content-between align-items-center mt-3">
                                 <div class="text-muted">Tạm tính:</div>
-                                <div class="text-white fw-medium"><?php echo number_format($total, 0, ',', '.'); ?> VND</div>
+                                <div class="fw-medium" style="color: var(--text-main);"><?php echo number_format($total, 0, ',', '.'); ?> VND</div>
                             </div>
 
                             <?php 
@@ -93,7 +93,7 @@
                             <?php endif; ?>
 
                             <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-secondary border-opacity-20">
-                                <h6 class="text-white fw-bold mb-0">Tổng thanh toán:</h6>
+                                <h6 class="fw-bold mb-0" style="color: var(--text-main);">Tổng thanh toán:</h6>
                                 <h5 class="text-success fw-bold mb-0" style="color: #30d158 !important;"><?php echo number_format(max(0, $total - $discount), 0, ',', '.'); ?> VND</h5>
                             </div>
                         <?php else: ?>

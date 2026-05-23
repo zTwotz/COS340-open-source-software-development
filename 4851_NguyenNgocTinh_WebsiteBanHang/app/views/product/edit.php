@@ -137,7 +137,8 @@
             </div>
 
             <!-- Actual form (hidden until data loads) -->
-            <form id="edit-product-form" style="display: none;">
+            <form id="edit-product-form" method="POST" action="<?php echo BASE_URL; ?>/Product/update" enctype="multipart/form-data" style="display: none;">
+                <?php echo '<input type="hidden" name="csrf_token" value="' . SessionHelper::getCSRFToken() . '">'; ?>
                 <input type="hidden" id="id" name="id">
                 <input type="hidden" id="existing_image" name="existing_image">
 
@@ -161,12 +162,20 @@
                         <div class="char-counter"><span id="desc-count">0</span> ký tự</div>
                     </div>
 
-                    <!-- Giá + Danh mục -->
+                    <!-- Giá + Số lượng -->
                     <div class="col-sm-6">
                         <label for="price" class="form-label"><i class="fa-solid fa-coins me-1"></i>Giá bán (VND)</label>
                         <div class="input-icon-wrapper">
                             <i class="fa-solid fa-dong-sign input-icon"></i>
                             <input type="number" id="price" name="price" class="form-control form-control-glass" step="1000" min="0" placeholder="0" required>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6">
+                        <label for="stock" class="form-label"><i class="fa-solid fa-cubes me-1"></i>Số lượng tồn kho</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-hashtag input-icon"></i>
+                            <input type="number" id="stock" name="stock" class="form-control form-control-glass" min="0" step="1" placeholder="0" required>
                         </div>
                     </div>
 
@@ -228,6 +237,7 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('name').value = data.name;
             document.getElementById('description').value = data.description;
             document.getElementById('price').value = data.price;
+            document.getElementById('stock').value = data.stock ?? 0;
             document.getElementById('desc-count').textContent = (data.description || '').length;
 
             if (document.getElementById('existing_image')) {
@@ -267,73 +277,11 @@ document.addEventListener("DOMContentLoaded", function() {
             `;
         });
 
-    // Form submission
-    document.getElementById('edit-product-form').addEventListener('submit', function(event) {
-        event.preventDefault();
-
+    // Form submission — native POST, just show spinner
+    document.getElementById('edit-product-form').addEventListener('submit', function() {
         const btn = document.getElementById('submit-btn');
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Đang lưu...';
-
-        const formData = new FormData(this);
-        const jsonData = {};
-        formData.forEach((value, key) => {
-            jsonData[key] = value;
-        });
-
-        const token = localStorage.getItem('jwtToken');
-        fetch(`<?= BASE_URL ?>/api/product/${jsonData.id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + (token || '')
-            },
-            body: JSON.stringify(jsonData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message === 'Product updated successfully') {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Cập nhật thành công!',
-                    text: 'Thông tin sản phẩm đã được lưu.',
-                    background: currentTheme === 'light' ? '#ffffff' : '#1d1d1f',
-                    color: currentTheme === 'light' ? '#1d1d1f' : '#f5f5f7',
-                    confirmButtonColor: '#0071e3',
-                    timer: 2000
-                }).then(() => {
-                    location.href = '<?= BASE_URL ?>/Product';
-                });
-            } else {
-                let errorMsg = 'Vui lòng kiểm tra lại thông tin.';
-                if (data.errors) {
-                    errorMsg = Object.values(data.errors).join('\n');
-                }
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Cập nhật thất bại',
-                    text: errorMsg,
-                    background: currentTheme === 'light' ? '#ffffff' : '#1d1d1f',
-                    color: currentTheme === 'light' ? '#1d1d1f' : '#f5f5f7',
-                    confirmButtonColor: '#ff453a'
-                });
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i>Lưu thay đổi';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Lỗi kết nối',
-                text: 'Không thể kết nối tới máy chủ. Vui lòng thử lại.',
-                background: currentTheme === 'light' ? '#ffffff' : '#1d1d1f',
-                color: currentTheme === 'light' ? '#1d1d1f' : '#f5f5f7',
-                confirmButtonColor: '#ff453a'
-            });
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i>Lưu thay đổi';
-        });
     });
 });
 </script>

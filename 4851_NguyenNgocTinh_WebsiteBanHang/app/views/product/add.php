@@ -100,11 +100,13 @@
                 </div>
                 <div>
                     <h2 class="text-gradient fw-bold mb-0">Thêm sản phẩm mới</h2>
-                    <p class="text-muted mb-0" style="font-size: 0.85rem;">Nhập thông tin sản phẩm qua API</p>
+                    <p class="text-muted mb-0" style="font-size: 0.85rem;">Nhập thông tin sản phẩm</p>
                 </div>
             </div>
 
-            <form id="add-product-form">
+            <form id="add-product-form" method="POST" action="<?php echo BASE_URL; ?>/Product/save" enctype="multipart/form-data">
+                <?php echo '<input type="hidden" name="csrf_token" value="' . SessionHelper::getCSRFToken() . '">'; ?>
+
                 <div class="row g-4">
                     <!-- Tên sản phẩm -->
                     <div class="col-12">
@@ -125,7 +127,7 @@
                         <div class="char-counter"><span id="desc-count">0</span> ký tự</div>
                     </div>
 
-                    <!-- Giá + Danh mục (2 cột) -->
+                    <!-- Giá bán -->
                     <div class="col-sm-6">
                         <label for="price" class="form-label"><i class="fa-solid fa-coins me-1"></i>Giá bán (VND)</label>
                         <div class="input-icon-wrapper">
@@ -134,6 +136,22 @@
                         </div>
                     </div>
 
+                    <!-- Số lượng tồn kho -->
+                    <div class="col-sm-6">
+                        <label for="stock" class="form-label"><i class="fa-solid fa-cubes me-1"></i>Số lượng tồn kho</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-hashtag input-icon"></i>
+                            <input type="number" id="stock" name="stock" class="form-control form-control-glass" min="0" step="1" placeholder="0" required>
+                        </div>
+                    </div>
+
+                    <!-- Ảnh sản phẩm -->
+                    <div class="col-sm-6">
+                        <label for="image" class="form-label"><i class="fa-solid fa-image me-1"></i>Ảnh sản phẩm</label>
+                        <input type="file" id="image" name="image" accept="image/*" class="form-control form-control-glass">
+                    </div>
+
+                    <!-- Danh mục -->
                     <div class="col-sm-6">
                         <label for="category_id" class="form-label"><i class="fa-solid fa-folder me-1"></i>Danh mục</label>
                         <select id="category_id" name="category_id" class="form-control form-control-glass" required>
@@ -147,7 +165,7 @@
 
                 <!-- Actions -->
                 <div class="d-flex gap-3 justify-content-between align-items-center">
-                    <a href="<?= BASE_URL ?>/Product" class="btn btn-glass-secondary">
+                    <a href="<?php echo BASE_URL; ?>/Product" class="btn btn-glass-secondary">
                         <i class="fa-solid fa-arrow-left me-2"></i>Quay lại
                     </a>
                     <button type="submit" class="btn btn-premium px-4" id="submit-btn">
@@ -162,16 +180,20 @@
 <?php include 'app/views/shares/footer.php'; ?>
 
 <script>
-// Character counter for description
-document.getElementById('description').addEventListener('input', function() {
-    document.getElementById('desc-count').textContent = this.value.length;
-});
-
 document.addEventListener("DOMContentLoaded", function() {
+    // Character counter for description
+    const desc = document.getElementById('description');
+    const countSpan = document.getElementById('desc-count');
+    if (desc && countSpan) {
+        desc.addEventListener('input', function() {
+            countSpan.textContent = this.value.length;
+        });
+    }
+
     const currentTheme = localStorage.getItem('theme') || 'dark';
 
     // Load categories from API
-    fetch('<?= BASE_URL ?>/api/category')
+    fetch('<?php echo BASE_URL; ?>/api/category')
         .then(response => response.json())
         .then(data => {
             const categorySelect = document.getElementById('category_id');
@@ -192,74 +214,5 @@ document.addEventListener("DOMContentLoaded", function() {
                 confirmButtonColor: '#ff453a'
             });
         });
-
-    // Form submission
-    document.getElementById('add-product-form').addEventListener('submit', function(event) {
-        event.preventDefault();
-
-        const btn = document.getElementById('submit-btn');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Đang xử lý...';
-
-        const formData = new FormData(this);
-        const jsonData = {};
-        formData.forEach((value, key) => {
-            jsonData[key] = value;
-        });
-
-        const token = localStorage.getItem('jwtToken');
-        fetch('<?= BASE_URL ?>/api/product', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + (token || '')
-            },
-            body: JSON.stringify(jsonData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message === 'Product created successfully') {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Thành công!',
-                    text: 'Sản phẩm đã được thêm vào hệ thống.',
-                    background: currentTheme === 'light' ? '#ffffff' : '#1d1d1f',
-                    color: currentTheme === 'light' ? '#1d1d1f' : '#f5f5f7',
-                    confirmButtonColor: '#0071e3',
-                    timer: 2000
-                }).then(() => {
-                    location.href = '<?= BASE_URL ?>/Product';
-                });
-            } else {
-                let errorMsg = 'Vui lòng kiểm tra lại thông tin.';
-                if (data.errors) {
-                    errorMsg = Object.values(data.errors).join('\n');
-                }
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Thêm sản phẩm thất bại',
-                    text: errorMsg,
-                    background: currentTheme === 'light' ? '#ffffff' : '#1d1d1f',
-                    color: currentTheme === 'light' ? '#1d1d1f' : '#f5f5f7',
-                    confirmButtonColor: '#ff453a'
-                });
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-plus me-2"></i>Thêm sản phẩm';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Lỗi kết nối',
-                text: 'Không thể kết nối tới máy chủ. Vui lòng thử lại.',
-                background: currentTheme === 'light' ? '#ffffff' : '#1d1d1f',
-                color: currentTheme === 'light' ? '#1d1d1f' : '#f5f5f7',
-                confirmButtonColor: '#ff453a'
-            });
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-plus me-2"></i>Thêm sản phẩm';
-        });
-    });
 });
 </script>

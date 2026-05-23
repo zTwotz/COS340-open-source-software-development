@@ -56,6 +56,47 @@
     [data-theme="light"] .detail-desc {
         color: rgba(29, 29, 31, 0.65);
     }
+
+    .stock-info-block {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 8px 16px;
+        border-radius: 980px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+    }
+    .stock-info-success {
+        background: rgba(48, 209, 88, 0.12);
+        color: #30d158;
+        border: 1px solid rgba(48, 209, 88, 0.3);
+    }
+    [data-theme="light"] .stock-info-success {
+        background: rgba(52, 199, 89, 0.1);
+        color: #1a8a3a;
+        border: 1px solid rgba(52, 199, 89, 0.3);
+    }
+    .stock-info-warning {
+        background: rgba(255, 159, 10, 0.12);
+        color: #ff9f0a;
+        border: 1px solid rgba(255, 159, 10, 0.3);
+    }
+    [data-theme="light"] .stock-info-warning {
+        background: rgba(255, 149, 0, 0.1);
+        color: #b86e00;
+        border: 1px solid rgba(255, 149, 0, 0.3);
+    }
+    .stock-info-danger {
+        background: rgba(255, 69, 58, 0.12);
+        color: #ff453a;
+        border: 1px solid rgba(255, 69, 58, 0.3);
+    }
+    [data-theme="light"] .stock-info-danger {
+        background: rgba(255, 59, 48, 0.1);
+        color: #c0392b;
+        border: 1px solid rgba(255, 59, 48, 0.3);
+    }
 </style>
 
 <div class="row mb-3">
@@ -103,6 +144,28 @@
                 <p class="detail-desc">
                     <?php echo htmlspecialchars($product->description, ENT_QUOTES, 'UTF-8'); ?>
                 </p>
+
+                <!-- Stock display -->
+                <?php
+                $stock = (int)($product->stock ?? 0);
+                if ($stock <= 0) {
+                    $sClass = 'stock-info-danger';
+                    $sIcon  = 'fa-ban';
+                    $sLabel = 'Hết hàng';
+                } elseif ($stock <= 5) {
+                    $sClass = 'stock-info-warning';
+                    $sIcon  = 'fa-triangle-exclamation';
+                    $sLabel = 'Sắp hết hàng &mdash; chỉ còn ' . $stock . ' sản phẩm';
+                } else {
+                    $sClass = 'stock-info-success';
+                    $sIcon  = 'fa-circle-check';
+                    $sLabel = 'Còn ' . $stock . ' sản phẩm trong kho';
+                }
+                ?>
+                <div class="stock-info-block <?php echo $sClass; ?>">
+                    <i class="fa-solid <?php echo $sIcon; ?>"></i>
+                    <span><?php echo $sLabel; ?></span>
+                </div>
 
                 <div class="d-flex flex-wrap gap-3">
                     <a href="<?php echo BASE_URL; ?>/Product/addToCart/<?php echo $product->id; ?>" class="btn btn-premium px-4 py-2">

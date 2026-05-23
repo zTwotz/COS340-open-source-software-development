@@ -36,14 +36,14 @@
                     <?php foreach ($categories as $category): ?>
                         <tr>
                             <td><span class="badge-premium">#<?php echo $category->id; ?></span></td>
-                            <td><strong class="text-white"><?php echo htmlspecialchars($category->name, ENT_QUOTES, 'UTF-8'); ?></strong></td>
+                            <td><strong style="color: var(--text-main);"><?php echo htmlspecialchars($category->name, ENT_QUOTES, 'UTF-8'); ?></strong></td>
                             <td class="text-muted"><?php echo htmlspecialchars($category->description ?? 'Không có mô tả', ENT_QUOTES, 'UTF-8'); ?></td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-2">
                                     <a href="<?php echo BASE_URL; ?>/Category/edit/<?php echo $category->id; ?>" class="btn btn-sm btn-premium-warning" title="Sửa">
                                         <i class="fa-solid fa-pen"></i>
                                     </a>
-                                    <button onclick="confirmDelete('<?php echo $category->id; ?>', '<?php echo htmlspecialchars($category->name, ENT_QUOTES, 'UTF-8'); ?>')" class="btn btn-sm btn-premium-danger" title="Xóa">
+                                    <button onclick="confirmDelete('<?php echo $category->id; ?>', '<?php echo htmlspecialchars($category->name, ENT_QUOTES, 'UTF-8'); ?>', <?php echo (int)($category->product_count ?? 0); ?>)" class="btn btn-sm btn-premium-danger" title="Xóa">
                                         <i class="fa-solid fa-trash-can"></i>
                                     </button>
                                 </div>
@@ -57,11 +57,25 @@
 </div>
 
 <script>
-function confirmDelete(id, name) {
+function confirmDelete(id, name, productCount) {
     const currentTheme = localStorage.getItem('theme') || 'dark';
+    
+    if (productCount > 0) {
+        Swal.fire({
+            title: 'Không thể xóa danh mục!',
+            text: "Danh mục '" + name + "' hiện đang có " + productCount + " sản phẩm. Vui lòng chuyển hoặc xóa hết sản phẩm thuộc danh mục này trước khi thực hiện xóa!",
+            icon: 'error',
+            background: currentTheme === 'light' ? '#ffffff' : '#1d1d1f',
+            color: currentTheme === 'light' ? '#1d1d1f' : '#f5f5f7',
+            confirmButtonColor: '#0071e3',
+            confirmButtonText: 'Đã hiểu'
+        });
+        return;
+    }
+
     Swal.fire({
-        title: 'Bạn có chắc chắn?',
-        text: "Hành động này sẽ xóa danh mục '" + name + "'. Vui lòng đảm bảo không có sản phẩm nào thuộc danh mục này trước khi xóa!",
+        title: 'Xác nhận xóa?',
+        text: "Bạn có chắc chắn muốn xóa danh mục '" + name + "'? Hành động này không thể hoàn tác!",
         icon: 'warning',
         showCancelButton: true,
         background: currentTheme === 'light' ? '#ffffff' : '#1d1d1f',

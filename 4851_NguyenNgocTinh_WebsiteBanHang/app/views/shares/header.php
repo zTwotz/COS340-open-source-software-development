@@ -94,65 +94,99 @@
     <style>
         :root {
             /* Apple Design System Variables */
-            --pure-black: #000000;
-            --white: #ffffff;
-            --light-gray: #f5f5f7;
-            --black: #1d1d1f;
-            --apple-blue: #0071e3;
-            --link-blue: #0066cc;
-            --link-blue-dark: #2997ff;
-            --gray-80: rgba(0, 0, 0, 0.8);
-            --gray-48: rgba(0, 0, 0, 0.48);
+            --primary: #0066cc;
+            --primary-focus: #0071e3;
+            --primary-on-dark: #2997ff;
+            --ink: #1d1d1f;
+            --body: #1d1d1f;
+            --body-on-dark: #ffffff;
+            --body-muted: #cccccc;
+            --ink-muted-80: #333333;
+            --ink-muted-48: #7a7a7a;
+            --divider-soft: rgba(255, 255, 255, 0.08);
+            --hairline: rgba(255, 255, 255, 0.08);
+            --canvas: #161617;
+            --canvas-parchment: #000000;
+            --surface-pearl: #1d1d1f;
+            --surface-tile-1: #272729;
+            --surface-tile-2: #2a2a2c;
+            --surface-tile-3: #252527;
+            --surface-black: #000000;
+            --surface-chip-translucent: rgba(210, 210, 215, 0.64);
             
-            --bg-gradient: #000000; /* Pure black */
-            --glass-bg: #1d1d1f; /* Apple dark surface */
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --glass-shadow: rgba(0, 0, 0, 0.4) 0px 8px 30px;
-            --accent-color: #0071e3; /* Apple Blue */
-            --accent-hover: #147ce5;
-            --text-main: #f5f5f7;
-            --text-muted: rgba(255, 255, 255, 0.6);
-            --card-hover-bg: #272729; /* Elevated dark card bg */
+            /* Compatibility mappings */
+            --bg-gradient: var(--canvas-parchment);
+            --glass-bg: var(--surface-tile-1);
+            --glass-border: var(--hairline);
+            --glass-shadow: rgba(0, 0, 0, 0.22) 3px 5px 30px 0px;
+            --accent-color: var(--primary);
+            --accent-hover: var(--primary-focus);
+            --text-main: #ffffff; /* White text for dark mode */
+            --text-muted: var(--body-muted);
+            --card-hover-bg: var(--surface-tile-2);
             
-            --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-            --font-text: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+            --font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+            --font-text: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
             --text-gradient: linear-gradient(180deg, #ffffff 0%, #a1a1a6 100%);
             
-            /* Navbar variables */
-            --nav-bg: rgba(0, 0, 0, 0.8);
+            /* Navbar variables (Always black global-nav) */
+            --nav-bg: var(--surface-black);
             --nav-border: rgba(255, 255, 255, 0.08);
             --nav-link: rgba(255, 255, 255, 0.8);
             --nav-link-hover: #ffffff;
             --nav-brand: #ffffff;
             
             /* Footer variables */
-            --footer-bg: #000000;
-            --footer-border: rgba(255, 255, 255, 0.08);
-            --footer-text: rgba(255, 255, 255, 0.48);
+            --footer-bg: var(--surface-tile-3);
+            --footer-border: var(--hairline);
+            --footer-text: var(--ink-muted-48);
         }
 
         /* Light Theme variables override */
         [data-theme="light"] {
-            --bg-gradient: #f5f5f7; /* Apple light gray background */
-            --glass-bg: #ffffff; /* Pure white card surface */
-            --glass-border: rgba(0, 0, 0, 0.08);
+            --primary: #0066cc;
+            --primary-focus: #0071e3;
+            --primary-on-dark: #2997ff;
+            --ink: #1d1d1f;
+            --body: #1d1d1f;
+            --body-on-dark: #ffffff;
+            --body-muted: #7a7a7a;
+            --ink-muted-80: #333333;
+            --ink-muted-48: #7a7a7a;
+            --divider-soft: #f0f0f0;
+            --hairline: #e0e0e0;
+            --canvas: #ffffff;
+            --canvas-parchment: #f5f5f7;
+            --surface-pearl: #fafafc;
+            --surface-tile-1: #272729;
+            --surface-tile-2: #2a2a2c;
+            --surface-tile-3: #252527;
+            --surface-black: #000000;
+            --surface-chip-translucent: rgba(210, 210, 215, 0.64);
+            
+            /* Compatibility mappings */
+            --bg-gradient: var(--canvas-parchment);
+            --glass-bg: var(--canvas);
+            --glass-border: var(--hairline);
             --glass-shadow: rgba(0, 0, 0, 0.04) 0px 8px 30px;
-            --text-main: #1d1d1f; /* Apple dark charcoal text */
-            --text-muted: rgba(29, 29, 31, 0.65);
-            --card-hover-bg: #f5f5f7; /* Light card hover bg */
+            --accent-color: var(--primary);
+            --accent-hover: var(--primary-focus);
+            --text-main: #000000; /* Black text in light mode */
+            --text-muted: var(--ink-muted-48);
+            --card-hover-bg: var(--surface-pearl);
             --text-gradient: linear-gradient(180deg, #1d1d1f 0%, #6e6e73 100%);
             
-            /* Navbar variables in Light mode */
-            --nav-bg: rgba(255, 255, 255, 0.8);
-            --nav-border: rgba(0, 0, 0, 0.08);
-            --nav-link: rgba(0, 0, 0, 0.65);
-            --nav-link-hover: #000000;
-            --nav-brand: #000000;
+            /* Navbar variables in Light mode (Always black global-nav) */
+            --nav-bg: var(--surface-black);
+            --nav-border: rgba(255, 255, 255, 0.08);
+            --nav-link: rgba(255, 255, 255, 0.8);
+            --nav-link-hover: #ffffff;
+            --nav-brand: #ffffff;
             
             /* Footer variables in Light mode */
-            --footer-bg: #f5f5f7;
-            --footer-border: rgba(0, 0, 0, 0.08);
-            --footer-text: rgba(0, 0, 0, 0.48);
+            --footer-bg: var(--canvas-parchment);
+            --footer-border: var(--hairline);
+            --footer-text: var(--ink-muted-48);
         }
 
         /* Smooth visual transitions */
@@ -165,6 +199,8 @@
 
         body {
             font-family: var(--font-text);
+            font-size: 17px;
+            line-height: 1.47;
             background: var(--bg-gradient);
             color: var(--text-main);
             min-height: 100vh;
@@ -172,6 +208,18 @@
             flex-direction: column;
             letter-spacing: -0.374px;
             -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, h4, h5, h6, .text-display-lg {
+            font-family: var(--font-display);
+            font-weight: 600;
+            letter-spacing: -0.01em; /* Apple tight negative tracking */
+            color: var(--text-main);
+        }
+
+        /* Force text colors to follow theme in Light Mode, except inside elements that must stay light */
+        [data-theme="light"] .text-white:not(.navbar):not(.navbar *):not(.btn):not(.btn *):not(.badge):not(.badge *):not(.btn-premium):not(.btn-premium-danger):not(.btn-premium-warning):not(.btn-premium-success):not(.alert):not(.alert *) {
+            color: var(--text-main) !important;
         }
 
         .navbar {
@@ -218,7 +266,7 @@
         .glass-card {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
-            border-radius: 12px;
+            border-radius: 18px; /* rounded.lg */
             box-shadow: var(--glass-shadow);
             padding: 2rem;
             transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.2s ease, box-shadow 0.3s ease;
@@ -229,7 +277,7 @@
             border: none;
             color: white !important;
             font-weight: 400;
-            padding: 8px 22px;
+            padding: 11px 22px; /* updated padding to match primary-button */
             border-radius: 980px; /* Signature Apple Pill */
             transition: opacity 0.15s ease, transform 0.1s ease;
             font-size: 14px;
@@ -240,12 +288,37 @@
         }
 
         .btn-premium:hover {
+            background: var(--accent-color) !important;
             opacity: 0.88;
             color: white !important;
         }
 
         .btn-premium:active {
-            transform: scale(0.98);
+            transform: scale(0.95);
+        }
+
+        .btn-secondary-pill {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary) !important;
+            font-weight: 400;
+            padding: 11px 22px;
+            border-radius: 980px;
+            transition: opacity 0.15s ease, transform 0.1s ease;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .btn-secondary-pill:hover {
+            background-color: rgba(0, 102, 204, 0.05) !important;
+            color: var(--primary) !important;
+        }
+
+        .btn-secondary-pill:active {
+            transform: scale(0.95);
         }
 
         .btn-glass-secondary {
@@ -269,16 +342,53 @@
         }
 
         .btn-glass-secondary:hover {
-            background: rgba(255, 255, 255, 0.18);
-            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.18) !important;
+            color: var(--text-main) !important;
         }
 
         [data-theme="light"] .btn-glass-secondary:hover {
-            background: rgba(0, 0, 0, 0.1);
+            background: rgba(0, 0, 0, 0.1) !important;
+            color: var(--text-main) !important;
         }
 
         .btn-glass-secondary:active {
-            transform: scale(0.98);
+            transform: scale(0.95);
+        }
+
+        .btn-dark-utility {
+            background: var(--ink);
+            color: var(--body-on-dark) !important;
+            font-size: 14px;
+            font-weight: 400;
+            padding: 8px 15px; /* padding 8px x 15px */
+            border-radius: 8px; /* rounded.sm */
+            transition: opacity 0.15s ease, transform 0.1s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            border: none;
+        }
+
+        [data-theme="light"] .btn-dark-utility {
+            background: var(--ink);
+            color: #ffffff !important;
+        }
+
+        .btn-dark-utility:hover {
+            background: var(--ink) !important;
+            color: var(--body-on-dark) !important;
+            opacity: 0.9;
+        }
+
+        [data-theme="light"] .btn-dark-utility:hover {
+            background: var(--ink) !important;
+            color: #ffffff !important;
+            opacity: 0.9;
+        }
+
+        .btn-dark-utility:active {
+            transform: scale(0.95);
         }
 
         .btn-premium-danger {
@@ -297,12 +407,13 @@
         }
 
         .btn-premium-danger:hover {
+            background: #ff453a !important;
             opacity: 0.88;
-            color: white;
+            color: white !important;
         }
 
         .btn-premium-danger:active {
-            transform: scale(0.98);
+            transform: scale(0.95);
         }
 
         .btn-premium-warning {
@@ -321,12 +432,13 @@
         }
 
         .btn-premium-warning:hover {
+            background: #ff9f0a !important;
             opacity: 0.88;
-            color: white;
+            color: white !important;
         }
 
         .btn-premium-warning:active {
-            transform: scale(0.98);
+            transform: scale(0.95);
         }
 
         .text-gradient {
@@ -507,11 +619,6 @@
             font-size: 10px;
             font-weight: 600;
             color: white;
-        }
-
-        [data-theme="light"] .user-badge {
-            background: rgba(0, 0, 0, 0.04);
-            border: 1px solid rgba(0, 0, 0, 0.06);
         }
     </style>
 </head>

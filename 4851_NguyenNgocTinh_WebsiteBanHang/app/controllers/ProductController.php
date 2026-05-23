@@ -91,6 +91,7 @@ class ProductController
             $description = trim($_POST['description'] ?? '');
             $price = $_POST['price'] ?? '';
             $category_id = $_POST['category_id'] ?? null;
+            $stock = isset($_POST['stock']) ? (int)$_POST['stock'] : 0;
             $image = "";
 
             // Check if file is uploaded
@@ -110,7 +111,7 @@ class ProductController
                 return;
             }
 
-            $result = $this->productModel->addProduct($name, $description, $price, $category_id, $image);
+            $result = $this->productModel->addProduct($name, $description, $price, $category_id, $image, $stock);
 
             if (is_array($result)) {
                 $errors = $result;
@@ -166,6 +167,7 @@ class ProductController
             $price = $_POST['price'] ?? '';
             $category_id = $_POST['category_id'] ?? null;
             $existing_image = $_POST['existing_image'] ?? '';
+            $stock = isset($_POST['stock']) ? (int)$_POST['stock'] : 0;
 
             $errors = [];
             if (empty($name)) {
@@ -202,7 +204,7 @@ class ProductController
                 return;
             }
 
-            $edit = $this->productModel->updateProduct($id, $name, $description, $price, $category_id, $image);
+            $edit = $this->productModel->updateProduct($id, $name, $description, $price, $category_id, $image, $stock);
 
             if ($edit) {
                 $_SESSION['success_msg'] = "Cập nhật sản phẩm thành công!";

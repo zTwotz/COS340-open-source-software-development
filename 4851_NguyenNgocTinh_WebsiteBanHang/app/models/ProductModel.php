@@ -126,7 +126,7 @@ class ProductModel
         return $result;
     }
 
-    public function addProduct($name, $description, $price, $category_id, $image = "")
+    public function addProduct($name, $description, $price, $category_id, $image = "", $stock = 0)
     {
         $errors = [];
         if (empty($name)) {
@@ -145,8 +145,8 @@ class ProductModel
             return $errors;
         }
 
-        $query = "INSERT INTO " . $this->table_name . " (name, description, price, category_id, image) 
-                  VALUES (:name, :description, :price, :category_id, :image)";
+        $query = "INSERT INTO " . $this->table_name . " (name, description, price, category_id, image, stock) 
+                  VALUES (:name, :description, :price, :category_id, :image, :stock)";
         $stmt = $this->conn->prepare($query);
 
         $name = htmlspecialchars(strip_tags($name));
@@ -154,12 +154,14 @@ class ProductModel
         $price = htmlspecialchars(strip_tags($price));
         $category_id = htmlspecialchars(strip_tags($category_id));
         $image = htmlspecialchars(strip_tags($image));
+        $stock = (int)$stock;
 
         $stmt->bindParam(':name', $name);
         $stmt->bindParam(':description', $description);
         $stmt->bindParam(':price', $price);
         $stmt->bindParam(':category_id', $category_id);
         $stmt->bindParam(':image', $image);
+        $stmt->bindParam(':stock', $stock, PDO::PARAM_INT);
 
         if ($stmt->execute()) {
             return true;
@@ -167,7 +169,7 @@ class ProductModel
         return false;
     }
 
-    public function updateProduct($id, $name, $description, $price, $category_id, $image = "")
+    public function updateProduct($id, $name, $description, $price, $category_id, $image = "", $stock = 0)
     {
         $errors = [];
         if (empty($name)) {
@@ -187,7 +189,7 @@ class ProductModel
         }
 
         $query = "UPDATE " . $this->table_name . " 
-                  SET name=:name, description=:description, price=:price, category_id=:category_id, image=:image 
+                  SET name=:name, description=:description, price=:price, category_id=:category_id, image=:image, stock=:stock 
                   WHERE id=:id";
         $stmt = $this->conn->prepare($query);
 
@@ -197,6 +199,7 @@ class ProductModel
         $price = htmlspecialchars(strip_tags($price));
         $category_id = htmlspecialchars(strip_tags($category_id));
         $image = htmlspecialchars(strip_tags($image));
+        $stock = (int)$stock;
 
         $stmt->bindParam(':id', $id);
         $stmt->bindParam(':name', $name);
@@ -204,6 +207,7 @@ class ProductModel
         $stmt->bindParam(':price', $price);
         $stmt->bindParam(':category_id', $category_id);
         $stmt->bindParam(':image', $image);
+        $stmt->bindParam(':stock', $stock, PDO::PARAM_INT);
 
         if ($stmt->execute()) {
             return true;
