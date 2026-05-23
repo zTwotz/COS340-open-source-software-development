@@ -132,7 +132,10 @@
                         <label for="price" class="form-label"><i class="fa-solid fa-coins me-1"></i>Giá bán (VND)</label>
                         <div class="input-icon-wrapper">
                             <i class="fa-solid fa-dong-sign input-icon"></i>
-                            <input type="number" id="price" name="price" class="form-control form-control-glass" step="1000" min="0" placeholder="0" required>
+                            <input type="number" id="price" name="price" class="form-control form-control-glass" step="1000" placeholder="0" required>
+                        </div>
+                        <div class="error-msg text-danger mt-1 fw-medium" id="price-error" style="font-size: 0.8rem; display: none;">
+                            <i class="fa-solid fa-circle-exclamation me-1"></i>Không được nhập số âm!
                         </div>
                     </div>
 
@@ -141,7 +144,10 @@
                         <label for="stock" class="form-label"><i class="fa-solid fa-cubes me-1"></i>Số lượng tồn kho</label>
                         <div class="input-icon-wrapper">
                             <i class="fa-solid fa-hashtag input-icon"></i>
-                            <input type="number" id="stock" name="stock" class="form-control form-control-glass" min="0" step="1" placeholder="0" required>
+                            <input type="number" id="stock" name="stock" class="form-control form-control-glass" step="1" placeholder="0" required>
+                        </div>
+                        <div class="error-msg text-danger mt-1 fw-medium" id="stock-error" style="font-size: 0.8rem; display: none;">
+                            <i class="fa-solid fa-circle-exclamation me-1"></i>Không được nhập số âm!
                         </div>
                     </div>
 
@@ -188,6 +194,47 @@ document.addEventListener("DOMContentLoaded", function() {
         desc.addEventListener('input', function() {
             countSpan.textContent = this.value.length;
         });
+    }
+
+    // Live validation for negative numbers
+    const priceInput = document.getElementById('price');
+    const stockInput = document.getElementById('stock');
+    const submitBtn = document.getElementById('submit-btn');
+
+    function validateInputs() {
+        let isPriceInvalid = false;
+        let isStockInvalid = false;
+
+        const priceVal = parseFloat(priceInput.value);
+        if (!isNaN(priceVal) && priceVal < 0) {
+            document.getElementById('price-error').style.display = 'block';
+            priceInput.style.borderColor = '#ff453a';
+            isPriceInvalid = true;
+        } else {
+            document.getElementById('price-error').style.display = 'none';
+            priceInput.style.borderColor = '';
+        }
+
+        const stockVal = parseInt(stockInput.value);
+        if (!isNaN(stockVal) && stockVal < 0) {
+            document.getElementById('stock-error').style.display = 'block';
+            stockInput.style.borderColor = '#ff453a';
+            isStockInvalid = true;
+        } else {
+            document.getElementById('stock-error').style.display = 'none';
+            stockInput.style.borderColor = '';
+        }
+
+        if (isPriceInvalid || isStockInvalid) {
+            submitBtn.disabled = true;
+        } else {
+            submitBtn.disabled = false;
+        }
+    }
+
+    if (priceInput && stockInput) {
+        priceInput.addEventListener('input', validateInputs);
+        stockInput.addEventListener('input', validateInputs);
     }
 
     const currentTheme = localStorage.getItem('theme') || 'dark';

@@ -138,6 +138,9 @@ class ProductModel
         if (!is_numeric($price) || $price < 0) {
             $errors['price'] = 'Giá sản phẩm không hợp lệ';
         }
+        if ($stock < 0) {
+            $errors['stock'] = 'Số lượng sản phẩm không được là số âm';
+        }
         if (empty($category_id)) {
             $errors['category_id'] = 'Vui lòng chọn danh mục sản phẩm';
         }
@@ -180,6 +183,9 @@ class ProductModel
         }
         if (!is_numeric($price) || $price < 0) {
             $errors['price'] = 'Giá sản phẩm không hợp lệ';
+        }
+        if ($stock < 0) {
+            $errors['stock'] = 'Số lượng sản phẩm không được là số âm';
         }
         if (empty($category_id)) {
             $errors['category_id'] = 'Vui lòng chọn danh mục sản phẩm';
