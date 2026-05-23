@@ -185,6 +185,24 @@
                         </div>
                     </div>
 
+                    <!-- Ảnh sản phẩm -->
+                    <div class="col-sm-6">
+                        <label for="image" class="form-label"><i class="fa-solid fa-image me-1"></i>Ảnh sản phẩm</label>
+                        <input type="file" id="image" name="image" accept="image/*" class="form-control form-control-glass">
+                        <div class="mt-3">
+                            <div id="image-preview-wrapper" class="d-flex align-items-center justify-content-center" style="width: 150px; height: 150px; border-radius: 12px; border: 2px dashed var(--glass-border); background: rgba(255, 255, 255, 0.01); overflow: hidden; position: relative; transition: all 0.3s ease;">
+                                <div id="preview-placeholder" class="text-center text-muted" style="font-size: 0.8rem; padding: 10px;">
+                                    <i class="fa-regular fa-image d-block fs-3 mb-2 opacity-50"></i>
+                                    <span>Chưa chọn ảnh</span>
+                                </div>
+                                <img id="image-preview" src="#" alt="Preview" style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
+                                <button type="button" id="remove-image-preview" class="btn btn-sm btn-danger d-flex align-items-center justify-content-center" style="display: none; position: absolute; top: 8px; right: 8px; border-radius: 50%; width: 24px; height: 24px; padding: 0; opacity: 0.8; font-size: 0.75rem; border: none; background: rgba(255, 69, 58, 0.9);">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="col-sm-6">
                         <label for="category_id" class="form-label"><i class="fa-solid fa-folder me-1"></i>Danh mục</label>
                         <select id="category_id" name="category_id" class="form-control form-control-glass" required>
@@ -289,6 +307,58 @@ document.addEventListener("DOMContentLoaded", function() {
 
             if (document.getElementById('existing_image')) {
                 document.getElementById('existing_image').value = data.image || '';
+            }
+
+            // Preview logic for edit
+            const previewWrapper = document.getElementById('image-preview-wrapper');
+            const previewPlaceholder = document.getElementById('preview-placeholder');
+            const previewImg = document.getElementById('image-preview');
+            const removeBtn = document.getElementById('remove-image-preview');
+
+            if (data.image) {
+                previewImg.src = `<?= BASE_URL ?>/${data.image}`;
+                previewImg.style.display = 'block';
+                previewPlaceholder.style.display = 'none';
+                removeBtn.style.display = 'flex';
+                previewWrapper.style.borderStyle = 'solid';
+            } else {
+                previewImg.src = '#';
+                previewImg.style.display = 'none';
+                previewPlaceholder.style.display = 'block';
+                removeBtn.style.display = 'none';
+                previewWrapper.style.borderStyle = 'dashed';
+            }
+
+            const imageInput = document.getElementById('image');
+            if (imageInput) {
+                imageInput.addEventListener('change', function() {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            previewImg.src = e.target.result;
+                            previewImg.style.display = 'block';
+                            previewPlaceholder.style.display = 'none';
+                            removeBtn.style.display = 'flex';
+                            previewWrapper.style.borderStyle = 'solid';
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function() {
+                    imageInput.value = '';
+                    if (document.getElementById('existing_image')) {
+                        document.getElementById('existing_image').value = '';
+                    }
+                    previewImg.src = '#';
+                    previewImg.style.display = 'none';
+                    previewPlaceholder.style.display = 'block';
+                    removeBtn.style.display = 'none';
+                    previewWrapper.style.borderStyle = 'dashed';
+                });
             }
 
             // Then load categories
