@@ -15,7 +15,7 @@ class CategoryModel
                   FROM " . $this->table_name . " c 
                   LEFT JOIN product p ON c.id = p.category_id 
                   GROUP BY c.id, c.name, c.description 
-                  ORDER BY c.name ASC";
+                  ORDER BY c.id ASC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         $result = $stmt->fetchAll(PDO::FETCH_OBJ);
@@ -42,12 +42,32 @@ class CategoryModel
             return $errors;
         }
 
-        $query = "INSERT INTO " . $this->table_name . " (name, description) VALUES (:name, :description)";
+        // Find the lowest available unused ID (gap filling)
+        $query_id = "SELECT id FROM " . $this->table_name . " WHERE id = 1";
+        $stmt_id = $this->conn->prepare($query_id);
+        $stmt_id->execute();
+        if ($stmt_id->rowCount() == 0) {
+            $next_id = 1;
+        } else {
+            $query_gap = "SELECT c1.id + 1 AS next_id
+                          FROM " . $this->table_name . " c1
+                          LEFT JOIN " . $this->table_name . " c2 ON c1.id + 1 = c2.id
+                          WHERE c2.id IS NULL
+                          ORDER BY next_id ASC
+                          LIMIT 1";
+            $stmt_gap = $this->conn->prepare($query_gap);
+            $stmt_gap->execute();
+            $row_gap = $stmt_gap->fetch(PDO::FETCH_ASSOC);
+            $next_id = $row_gap['next_id'];
+        }
+
+        $query = "INSERT INTO " . $this->table_name . " (id, name, description) VALUES (:id, :name, :description)";
         $stmt = $this->conn->prepare($query);
 
         $name = htmlspecialchars(strip_tags($name));
         $description = htmlspecialchars(strip_tags($description));
 
+        $stmt->bindParam(':id', $next_id);
         $stmt->bindParam(':name', $name);
         $stmt->bindParam(':description', $description);
 
