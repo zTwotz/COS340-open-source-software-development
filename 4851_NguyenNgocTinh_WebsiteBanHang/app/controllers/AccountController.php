@@ -68,6 +68,7 @@ class AccountController {
     }
 
     function logout(){
+        unset($_SESSION['user_id']);
         unset($_SESSION['username']);
         unset($_SESSION['user_role']);
         unset($_SESSION['user_fullname']);
@@ -95,6 +96,7 @@ class AccountController {
             unset($_SESSION['cart']);
             unset($_SESSION['coupon']);
 
+            $_SESSION['user_id'] = $user->id;
             $_SESSION['username'] = $user->username;
             $_SESSION['user_role'] = $user->role;
             $_SESSION['user_fullname'] = $user->fullname;
@@ -124,6 +126,7 @@ class AccountController {
             unset($_SESSION['coupon']);
 
             // Also set session for traditional web pages
+            $_SESSION['user_id'] = $user->id;
             $_SESSION['username'] = $user->username;
             $_SESSION['user_role'] = $user->role;
             $_SESSION['user_fullname'] = $user->fullname;

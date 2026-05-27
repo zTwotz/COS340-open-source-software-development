@@ -92,7 +92,7 @@ function confirmDelete(id, name, productCount) {
         cancelButtonText: 'Hủy bỏ'
     }).then((result) => {
         if (result.isConfirmed) {
-            window.location.href = '<?php echo BASE_URL; ?>/Category/delete/' + id;
+            window.location.href = '<?php echo BASE_URL; ?>/Category/delete/' + id + '?csrf_token=<?php echo SessionHelper::getCSRFToken(); ?>';
         }
     })
 }

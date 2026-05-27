@@ -92,9 +92,17 @@
                                 </div>
                             <?php endif; ?>
 
+                            <?php 
+                            $shipping_fee = $total >= 50000000 ? 0 : 100000;
+                            ?>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <div class="text-muted">Phí giao hàng:</div>
+                                <div class="fw-medium" style="color: var(--text-main);"><?php echo $shipping_fee > 0 ? number_format($shipping_fee, 0, ',', '.') . ' VND' : 'Miễn phí'; ?></div>
+                            </div>
+
                             <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-secondary border-opacity-20">
                                 <h6 class="fw-bold mb-0" style="color: var(--text-main);">Tổng thanh toán:</h6>
-                                <h5 class="text-success fw-bold mb-0" style="color: #30d158 !important;"><?php echo number_format(max(0, $total - $discount), 0, ',', '.'); ?> VND</h5>
+                                <h5 class="text-success fw-bold mb-0" style="color: #30d158 !important;"><?php echo number_format(max(0, $total - $discount) + $shipping_fee, 0, ',', '.'); ?> VND</h5>
                             </div>
                         <?php else: ?>
                             <p class="text-muted mb-0">Không có sản phẩm nào trong giỏ hàng.</p>

@@ -2,7 +2,18 @@
 
 class SessionHelper {
     public static function isLoggedIn() {
-        return isset($_SESSION['username']);
+        $loggedIn = isset($_SESSION['username']);
+        if ($loggedIn && !isset($_SESSION['user_id'])) {
+            require_once 'app/config/database.php';
+            require_once 'app/models/AccountModel.php';
+            $db = (new Database())->getConnection();
+            $accountModel = new AccountModel($db);
+            $user = $accountModel->getAccountByUsername($_SESSION['username']);
+            if ($user) {
+                $_SESSION['user_id'] = $user->id;
+            }
+        }
+        return $loggedIn;
     }
 
     public static function isAdmin() {

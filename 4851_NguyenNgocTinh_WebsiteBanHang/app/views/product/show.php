@@ -168,9 +168,9 @@
                 </div>
 
                 <div class="d-flex flex-wrap gap-3">
-                    <a href="<?php echo BASE_URL; ?>/Product/addToCart/<?php echo $product->id; ?>" class="btn btn-premium px-4 py-2">
+                    <button onclick="addToCartAjax(event, '<?php echo $product->id; ?>')" class="btn btn-premium px-4 py-2">
                         <i class="fa-solid fa-cart-shopping me-2"></i>Thêm vào giỏ hàng
-                    </a>
+                    </button>
                     <?php if (SessionHelper::isAdmin()): ?>
                         <a href="<?php echo BASE_URL; ?>/Product/edit/<?php echo $product->id; ?>" class="btn btn-premium-warning px-4 py-2">
                             <i class="fa-solid fa-pen-to-square me-2"></i>Chỉnh sửa

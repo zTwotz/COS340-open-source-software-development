@@ -89,6 +89,142 @@
                 localStorage.removeItem('activeSocketId');
             }
         };
+
+        // Add to Cart AJAX Helper
+        function addToCartAjax(event, productId) {
+            if (event) event.preventDefault();
+            
+            const currentTheme = localStorage.getItem('theme') || 'dark';
+            
+            // Find product image to animate
+            let imgToAnimate = null;
+            if (event && event.target) {
+                const btn = event.target.closest('button, a');
+                if (btn) {
+                    const card = btn.closest('.product-card, .product-grid-card, .glass-card');
+                    if (card) {
+                        imgToAnimate = card.querySelector('img.product-card-img, img.product-grid-img, img.detail-img');
+                    }
+                }
+            }
+            
+            fetch('<?php echo BASE_URL; ?>/Product/addToCart/' + productId + '?ajax=1', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (imgToAnimate) {
+                        animateFlyToCart(imgToAnimate);
+                    }
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Đã thêm vào giỏ!',
+                        text: data.message,
+                        background: currentTheme === 'light' ? '#ffffff' : '#1d1d1f',
+                        color: currentTheme === 'light' ? '#1d1d1f' : '#f5f5f7',
+                        confirmButtonColor: '#0071e3',
+                        timer: 2000,
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false
+                    });
+                    
+                    updateCartBadge(data.cart_count);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi!',
+                        text: data.message,
+                        background: currentTheme === 'light' ? '#ffffff' : '#1d1d1f',
+                        color: currentTheme === 'light' ? '#1d1d1f' : '#f5f5f7',
+                        confirmButtonColor: '#ff453a',
+                        timer: 3000
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error adding to cart:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi!',
+                    text: 'Có lỗi xảy ra khi thêm vào giỏ hàng.',
+                    background: currentTheme === 'light' ? '#ffffff' : '#1d1d1f',
+                    color: currentTheme === 'light' ? '#1d1d1f' : '#f5f5f7',
+                    confirmButtonColor: '#ff453a',
+                    timer: 3000
+                });
+            });
+        }
+        
+        function animateFlyToCart(img) {
+            const cartIcon = document.querySelector('.fa-cart-shopping');
+            if (!cartIcon || !img) return;
+
+            // Get coordinates
+            const imgRect = img.getBoundingClientRect();
+            const cartRect = cartIcon.getBoundingClientRect();
+
+            // Create a clone
+            const clone = img.cloneNode();
+            clone.style.position = 'fixed';
+            clone.style.left = `${imgRect.left}px`;
+            clone.style.top = `${imgRect.top}px`;
+            clone.style.width = `${imgRect.width}px`;
+            clone.style.height = `${imgRect.height}px`;
+            clone.style.zIndex = '9999';
+            clone.style.transition = 'all 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+            clone.style.pointerEvents = 'none';
+            clone.style.borderRadius = '50%';
+            clone.style.opacity = '0.8';
+
+            document.body.appendChild(clone);
+
+            // Force reflow
+            clone.offsetWidth;
+
+            // Animate
+            clone.style.left = `${cartRect.left}px`;
+            clone.style.top = `${cartRect.top}px`;
+            clone.style.width = '24px';
+            clone.style.height = '24px';
+            clone.style.opacity = '0';
+            clone.style.transform = 'rotate(360deg)';
+
+            // Clean up
+            setTimeout(() => {
+                clone.remove();
+                // Add a small shake/bounce to cart icon
+                cartIcon.classList.add('fa-bounce');
+                setTimeout(() => {
+                    cartIcon.classList.remove('fa-bounce');
+                }, 1000);
+            }, 800);
+        }
+        
+        function updateCartBadge(count) {
+            const cartLink = document.querySelector('a[href$="/Product/cart"]');
+            if (!cartLink) return;
+            
+            let badge = cartLink.querySelector('.cart-badge');
+            if (count > 0) {
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'cart-badge';
+                    badge.style.top = '-2px';
+                    badge.style.right = '-2px';
+                    cartLink.appendChild(badge);
+                }
+                badge.textContent = count;
+            } else {
+                if (badge) {
+                    badge.remove();
+                }
+            }
+        }
     </script>
     
     <style>
@@ -708,6 +844,17 @@
                         <li class="nav-item">
                             <a class="nav-link <?php echo is_active('/Category') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/Category/list">
                                 <i class="fa-solid fa-tags me-1"></i>Danh mục
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo is_active('/Order') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/Order">
+                                <i class="fa-solid fa-receipt me-1"></i>Quản lý đơn hàng
+                            </a>
+                        </li>
+                    <?php elseif ($isLoggedIn): ?>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo is_active('/Order') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/Order">
+                                <i class="fa-solid fa-receipt me-1"></i>Đơn hàng của tôi
                             </a>
                         </li>
                     <?php endif; ?>

@@ -227,6 +227,13 @@ class ProductController
             exit();
         }
 
+        $csrfToken = $_GET['csrf_token'] ?? '';
+        if (!SessionHelper::verifyCSRFToken($csrfToken)) {
+            $_SESSION['error_msg'] = "Yêu cầu không hợp lệ (CSRF Token không chính xác).";
+            header('Location: ' . BASE_URL . '/Product');
+            exit();
+        }
+
         if ($this->productModel->deleteProduct($id)) {
             $_SESSION['success_msg'] = "Đã xóa sản phẩm thành công!";
         } else {
@@ -275,8 +282,16 @@ class ProductController
 
     public function addToCart($id)
     {
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') || isset($_GET['ajax']);
+
         $product = $this->productModel->getProductById($id);
         if (!$product) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Không tìm thấy sản phẩm.']);
+                exit();
+            }
             $_SESSION['error_msg'] = "Không tìm thấy sản phẩm.";
             header('Location: ' . BASE_URL . '/Product');
             exit();
@@ -290,6 +305,11 @@ class ProductController
         $newQty = $currentQtyInCart + 1;
 
         if ($newQty > $product->stock) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => "Không thể thêm sản phẩm. Số lượng trong kho chỉ còn " . $product->stock . " sản phẩm."]);
+                exit();
+            }
             $_SESSION['error_msg'] = "Không thể thêm sản phẩm. Số lượng trong kho chỉ còn " . $product->stock . " sản phẩm.";
             header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? (BASE_URL . '/Product')));
             exit();
@@ -308,8 +328,18 @@ class ProductController
             ];
         }
 
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => 'Đã thêm sản phẩm vào giỏ hàng!',
+                'cart_count' => $this->getCartCount()
+            ]);
+            exit();
+        }
+
         $_SESSION['success_msg'] = "Đã thêm sản phẩm vào giỏ hàng!";
-        header('Location: ' . BASE_URL . '/Product/cart');
+        header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? (BASE_URL . '/Product')));
         exit();
     }
 
@@ -354,10 +384,37 @@ class ProductController
 
     public function removeFromCart($id)
     {
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') || isset($_GET['ajax']);
+
         if (isset($_SESSION['cart'][$id])) {
             unset($_SESSION['cart'][$id]);
             $_SESSION['success_msg'] = "Đã xóa sản phẩm khỏi giỏ hàng!";
         }
+
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            $grand_total = 0;
+            if (isset($_SESSION['cart'])) {
+                foreach ($_SESSION['cart'] as $item) {
+                    $grand_total += $item['price'] * $item['quantity'];
+                }
+            }
+            $discount_amount = $this->calculateDiscount($grand_total);
+            $shipping_fee = $grand_total >= 50000000 ? 0 : 100000;
+            $final_total = max(0, $grand_total - $discount_amount) + $shipping_fee;
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Đã xóa sản phẩm khỏi giỏ hàng!',
+                'grand_total' => number_format($grand_total, 0, ',', '.'),
+                'discount_amount' => number_format($discount_amount, 0, ',', '.'),
+                'shipping_fee' => $shipping_fee > 0 ? number_format($shipping_fee, 0, ',', '.') . ' VND' : 'Miễn phí',
+                'final_total' => number_format($final_total, 0, ',', '.'),
+                'cart_count' => $this->getCartCount()
+            ]);
+            exit();
+        }
+
         header('Location: ' . BASE_URL . '/Product/cart');
         exit();
     }
@@ -404,7 +461,8 @@ class ProductController
         }
 
         $discount_amount = $this->calculateDiscount($grand_total);
-        $final_total = max(0, $grand_total - $discount_amount);
+        $shipping_fee = $grand_total >= 50000000 ? 0 : 100000;
+        $final_total = max(0, $grand_total - $discount_amount) + $shipping_fee;
 
         echo json_encode([
             'success' => true,
@@ -414,6 +472,7 @@ class ProductController
             'item_subtotal' => number_format($item_subtotal, 0, ',', '.'),
             'grand_total' => number_format($grand_total, 0, ',', '.'),
             'discount_amount' => number_format($discount_amount, 0, ',', '.'),
+            'shipping_fee' => $shipping_fee > 0 ? number_format($shipping_fee, 0, ',', '.') . ' VND' : 'Miễn phí',
             'final_total' => number_format($final_total, 0, ',', '.'),
             'cart_count' => $this->getCartCount()
         ]);
@@ -460,7 +519,8 @@ class ProductController
         }
 
         $discount_amount = $this->calculateDiscount($grand_total);
-        $final_total = max(0, $grand_total - $discount_amount);
+        $shipping_fee = $grand_total >= 50000000 ? 0 : 100000;
+        $final_total = max(0, $grand_total - $discount_amount) + $shipping_fee;
 
         echo json_encode([
             'success' => true,
@@ -468,6 +528,7 @@ class ProductController
             'coupon_code' => $code,
             'description' => $coupon['description'],
             'discount_amount' => number_format($discount_amount, 0, ',', '.'),
+            'shipping_fee' => $shipping_fee > 0 ? number_format($shipping_fee, 0, ',', '.') . ' VND' : 'Miễn phí',
             'final_total' => number_format($final_total, 0, ',', '.')
         ]);
         exit();
@@ -485,10 +546,15 @@ class ProductController
             }
         }
 
+        $shipping_fee = $grand_total >= 50000000 ? 0 : 100000;
+        $final_total = $grand_total + $shipping_fee;
+
         echo json_encode([
             'success' => true,
             'message' => 'Đã xóa mã giảm giá.',
-            'grand_total' => number_format($grand_total, 0, ',', '.')
+            'grand_total' => number_format($grand_total, 0, ',', '.'),
+            'shipping_fee' => $shipping_fee > 0 ? number_format($shipping_fee, 0, ',', '.') . ' VND' : 'Miễn phí',
+            'final_total' => number_format($final_total, 0, ',', '.')
         ]);
         exit();
     }
@@ -557,11 +623,15 @@ class ProductController
 
                 $coupon_code = isset($_SESSION['coupon']) ? $_SESSION['coupon']['code'] : null;
                 $discount_amount = $this->calculateDiscount($grand_total);
-                $total_amount = max(0, $grand_total - $discount_amount);
+                $shipping_fee = $grand_total >= 50000000 ? 0 : 100000;
+                $total_amount = max(0, $grand_total - $discount_amount) + $shipping_fee;
 
-                $query = "INSERT INTO orders (name, phone, address, coupon_code, discount_amount, total_amount) 
-                          VALUES (:name, :phone, :address, :coupon_code, :discount_amount, :total_amount)";
+                $accountId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+
+                $query = "INSERT INTO orders (account_id, name, phone, address, coupon_code, discount_amount, total_amount) 
+                          VALUES (:account_id, :name, :phone, :address, :coupon_code, :discount_amount, :total_amount)";
                 $stmt = $this->db->prepare($query);
+                $stmt->bindParam(':account_id', $accountId);
                 $stmt->bindParam(':name', $name);
                 $stmt->bindParam(':phone', $phone);
                 $stmt->bindParam(':address', $address);
