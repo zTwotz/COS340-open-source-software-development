@@ -116,6 +116,13 @@ class CategoryController
 
     public function delete($id)
     {
+        $csrfToken = $_GET['csrf_token'] ?? '';
+        if (!SessionHelper::verifyCSRFToken($csrfToken)) {
+            $_SESSION['error_msg'] = "Yêu cầu không hợp lệ (CSRF Token không chính xác).";
+            header('Location: ' . BASE_URL . '/Category/list');
+            exit();
+        }
+
         $result = $this->categoryModel->deleteCategory($id);
 
         if ($result === true) {

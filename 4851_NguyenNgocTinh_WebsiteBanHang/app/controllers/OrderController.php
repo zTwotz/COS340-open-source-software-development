@@ -1,0 +1,115 @@
+<?php
+require_once('app/config/database.php');
+require_once('app/models/OrderModel.php');
+require_once('app/helpers/SessionHelper.php');
+
+class OrderController
+{
+    private $orderModel;
+    private $db;
+
+    public function __construct()
+    {
+        $this->db = (new Database())->getConnection();
+        $this->orderModel = new OrderModel($this->db);
+    }
+
+    private function requireLogin()
+    {
+        if (!SessionHelper::isLoggedIn()) {
+            $_SESSION['error_msg'] = "Vui lòng đăng nhập để truy cập chức năng này.";
+            header('Location: ' . BASE_URL . '/account/login');
+            exit();
+        }
+
+        // Populate user_id if missing (for users logged in before this update)
+        if (!isset($_SESSION['user_id'])) {
+            require_once('app/models/AccountModel.php');
+            $accountModel = new AccountModel($this->db);
+            $user = $accountModel->getAccountByUsername($_SESSION['username']);
+            if ($user) {
+                $_SESSION['user_id'] = $user->id;
+            }
+        }
+    }
+
+    public function index()
+    {
+        $this->requireLogin();
+
+        if (SessionHelper::isAdmin()) {
+            $orders = $this->orderModel->getAllOrders();
+            include 'app/views/order/admin_orders.php';
+        } else {
+            $accountId = $_SESSION['user_id'];
+            $orders = $this->orderModel->getOrdersByAccountId($accountId);
+            include 'app/views/order/user_orders.php';
+        }
+    }
+
+    public function show($id)
+    {
+        $this->requireLogin();
+
+        $order = $this->orderModel->getOrderById($id);
+        if (!$order) {
+            $_SESSION['error_msg'] = "Không tìm thấy đơn hàng.";
+            header('Location: ' . BASE_URL . '/Order');
+            exit();
+        }
+
+        // Access control: only admin or the order owner can view details
+        if (!SessionHelper::isAdmin() && $order->account_id != $_SESSION['user_id']) {
+            $_SESSION['error_msg'] = "Quyền truy cập bị từ chối.";
+            header('Location: ' . BASE_URL . '/Order');
+            exit();
+        }
+
+        $details = $this->orderModel->getOrderDetails($id);
+        include 'app/views/order/detail.php';
+    }
+
+    public function updateStatus()
+    {
+        $this->requireLogin();
+
+        if (!SessionHelper::isAdmin()) {
+            $_SESSION['error_msg'] = "Quyền truy cập bị từ chối. Chỉ Admin mới được thực hiện chức năng này.";
+            header('Location: ' . BASE_URL . '/Order');
+            exit();
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $csrfToken = $_POST['csrf_token'] ?? '';
+            if (!SessionHelper::verifyCSRFToken($csrfToken)) {
+                $_SESSION['error_msg'] = "Yêu cầu không hợp lệ (CSRF Token không chính xác).";
+                header('Location: ' . BASE_URL . '/Order');
+                exit();
+            }
+
+            $orderId = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+            $status = trim($_POST['status'] ?? '');
+
+            $validStatuses = ['Chờ xác nhận', 'Đang chuẩn bị hàng', 'Đang giao hàng', 'Đã giao hàng'];
+            if (!in_array($status, $validStatuses)) {
+                $_SESSION['error_msg'] = "Trạng thái đơn hàng không hợp lệ.";
+                header('Location: ' . BASE_URL . '/Order/show/' . $orderId);
+                exit();
+            }
+
+            $result = $this->orderModel->updateOrderStatus($orderId, $status);
+            if ($result) {
+                $_SESSION['success_msg'] = "Cập nhật trạng thái đơn hàng thành công!";
+            } else {
+                $_SESSION['error_msg'] = "Có lỗi xảy ra khi cập nhật trạng thái.";
+            }
+
+            header('Location: ' . BASE_URL . '/Order/show/' . $orderId);
+            exit();
+        } else {
+            header('Location: ' . BASE_URL . '/Order');
+            exit();
+        }
+    }
+}
+?>

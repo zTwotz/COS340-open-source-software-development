@@ -112,7 +112,8 @@ if (isset($_SESSION['coupon'])) {
         $discount_amount = min($grand_total, $coupon['value']);
     }
 }
-$final_total = max(0, $grand_total - $discount_amount);
+$shipping_fee = $grand_total >= 50000000 ? 0 : 100000;
+$final_total = max(0, $grand_total - $discount_amount) + $shipping_fee;
 ?>
 
 <?php if (empty($_SESSION['cart'])): ?>
@@ -196,8 +197,19 @@ $final_total = max(0, $grand_total - $discount_amount);
         <!-- Checkout Card -->
         <div class="col-lg-4">
             <div class="cart-total-box">
-                <h4 class="fw-bold mb-4" style="color: var(--text-main);"><i class="fa-solid fa-file-invoice-dollar me-2 text-primary"></i>Tổng đơn hàng</h4>
+                <h4 class="fw-bold mb-3" style="color: var(--text-main);"><i class="fa-solid fa-file-invoice-dollar me-2 text-primary"></i>Tổng đơn hàng</h4>
                 
+                <!-- Free Shipping Progress Bar -->
+                <div class="mb-4 p-3 rounded-3" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border);">
+                    <div class="d-flex justify-content-between mb-2 small text-muted">
+                        <span id="shipping-progress-text" style="font-size: 11px;">Mua thêm <strong class="text-success" id="shipping-needed-text"></strong> để được Miễn phí giao hàng</span>
+                        <span id="shipping-status-badge" class="badge bg-warning text-dark" style="font-size: 9px; line-height: 1.2;">Chưa đủ</span>
+                    </div>
+                    <div class="progress" style="height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 980px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" id="shipping-progress-bar" style="width: 0%; border-radius: 980px; transition: width 0.4s ease;"></div>
+                    </div>
+                </div>
+
                 <div class="d-flex justify-content-between mb-3">
                     <span class="text-muted">Tạm tính:</span>
                     <span class="fw-bold" id="grand-total-text" style="color: var(--text-main);"><?php echo number_format($grand_total, 0, ',', '.'); ?> VND</span>
@@ -211,7 +223,7 @@ $final_total = max(0, $grand_total - $discount_amount);
 
                 <div class="d-flex justify-content-between mb-4">
                     <span class="text-muted">Phí giao hàng:</span>
-                    <span class="text-success fw-bold">Miễn phí</span>
+                    <span class="fw-bold" id="shipping-fee-text" style="color: var(--text-main);"><?php echo $shipping_fee > 0 ? number_format($shipping_fee, 0, ',', '.') . ' VND' : 'Miễn phí'; ?></span>
                 </div>
                 
                 <hr style="border-color: var(--glass-border);">
@@ -250,6 +262,44 @@ $final_total = max(0, $grand_total - $discount_amount);
 <?php endif; ?>
 
 <script>
+// Free Shipping Progress Bar Helpers
+function updateFreeShippingProgress(grandTotalStr) {
+    const threshold = 50000000; // 50 million VND
+    const grandTotal = parseInt(grandTotalStr.replace(/\./g, '')) || 0;
+    const progressText = document.getElementById('shipping-progress-text');
+    const statusBadge = document.getElementById('shipping-status-badge');
+    const progressBar = document.getElementById('shipping-progress-bar');
+    
+    if (!progressBar) return;
+    
+    if (grandTotal >= threshold) {
+        progressText.innerHTML = '<span class="text-success fw-bold"><i class="fa-solid fa-circle-check me-1"></i>Đơn hàng của bạn đã được Miễn phí giao hàng!</span>';
+        statusBadge.textContent = 'Miễn phí';
+        statusBadge.className = 'badge bg-success text-white';
+        progressBar.style.width = '100%';
+    } else {
+        const needed = threshold - grandTotal;
+        const pct = (grandTotal / threshold) * 100;
+        
+        progressText.innerHTML = `Mua thêm <strong class="text-warning">${formatNumber(needed)} VND</strong> để được Miễn phí giao hàng`;
+        statusBadge.textContent = 'Chưa đủ';
+        statusBadge.className = 'badge bg-warning text-dark';
+        progressBar.style.width = `${pct}%`;
+    }
+}
+
+function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+// Initialize Free Shipping progress bar on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const grandTotalText = document.getElementById('grand-total-text');
+    if (grandTotalText) {
+        updateFreeShippingProgress(grandTotalText.textContent);
+    }
+});
+
 async function updateQtyAjax(productId, delta) {
     const input = document.getElementById(`qty-input-${productId}`);
     let newQty = parseInt(input.value) + delta;
@@ -280,12 +330,16 @@ async function sendQtyUpdate(productId, newQty) {
             document.getElementById(`subtotal-${productId}`).textContent = `${data.item_subtotal} VND`;
             document.getElementById('grand-total-text').textContent = `${data.grand_total} VND`;
             document.getElementById('final-total-text').textContent = `${data.final_total} VND`;
+            if (document.getElementById('shipping-fee-text')) {
+                document.getElementById('shipping-fee-text').textContent = data.shipping_fee;
+            }
             
             if (data.discount_amount !== '0') {
                 document.getElementById('discount-amount-text').textContent = `-${data.discount_amount} VND`;
             }
 
             updateCartBadge(data.cart_count);
+            updateFreeShippingProgress(data.grand_total);
 
             if (data.warning) {
                 const currentTheme = localStorage.getItem('theme') || 'dark';
@@ -336,9 +390,78 @@ async function deleteItemAjax(productId) {
 
     if (result.isConfirmed) {
         try {
-            await fetch(`<?php echo BASE_URL; ?>/Product/removeFromCart/${productId}`);
-            window.location.reload();
+            const response = await fetch(`<?php echo BASE_URL; ?>/Product/removeFromCart/${productId}?ajax=1`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                // Fade out row
+                const row = document.getElementById(`cart-row-${productId}`);
+                if (row) {
+                    row.style.transition = 'all 0.4s ease';
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        row.remove();
+                        
+                        // Switch UI to empty state if cart is completely empty
+                        if (parseInt(data.cart_count) === 0) {
+                            const cartContainer = document.querySelector('.main-container');
+                            if (cartContainer) {
+                                cartContainer.innerHTML = `
+                                    <div class="row mb-4">
+                                        <div class="col-12">
+                                            <h1 class="text-gradient fw-bold mb-1"><i class="fa-solid fa-cart-shopping me-2 text-primary"></i>Giỏ hàng của bạn</h1>
+                                            <p class="text-muted mb-0">Xem lại các sản phẩm và áp dụng ưu đãi trước khi thanh toán</p>
+                                        </div>
+                                    </div>
+                                    <div class="glass-card text-center py-5">
+                                        <div class="mb-4 text-muted">
+                                            <i class="fa-solid fa-basket-shopping fs-1 text-indigo-400" style="opacity: 0.6;"></i>
+                                        </div>
+                                        <h3>Giỏ hàng đang trống!</h3>
+                                        <p class="text-muted">Bạn chưa thêm bất kỳ sản phẩm nào vào giỏ hàng của mình.</p>
+                                        <a href="<?php echo BASE_URL; ?>/Product" class="btn btn-premium mt-3">
+                                            <i class="fa-solid fa-arrow-left me-2"></i>Quay lại mua sắm
+                                        </a>
+                                    </div>
+                                `;
+                            }
+                        }
+                    }, 400);
+                }
+                
+                // Update pricing details
+                document.getElementById('grand-total-text').textContent = `${data.grand_total} VND`;
+                document.getElementById('final-total-text').textContent = `${data.final_total} VND`;
+                if (document.getElementById('shipping-fee-text')) {
+                    document.getElementById('shipping-fee-text').textContent = data.shipping_fee;
+                }
+                
+                if (data.discount_amount === '0') {
+                    document.getElementById('discount-row').style.setProperty('display', 'none', 'important');
+                } else {
+                    document.getElementById('discount-amount-text').textContent = `-${data.discount_amount} VND`;
+                }
+
+                updateCartBadge(data.cart_count);
+                updateFreeShippingProgress(data.grand_total);
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Đã xóa!',
+                    text: data.message,
+                    background: currentTheme === 'light' ? '#ffffff' : '#1d1d1f',
+                    color: currentTheme === 'light' ? '#1d1d1f' : '#f5f5f7',
+                    confirmButtonColor: '#0071e3',
+                    timer: 2000
+                });
+            }
         } catch (error) {
+            console.error('Error removing from cart:', error);
             window.location.reload();
         }
     }
@@ -372,6 +495,9 @@ async function applyCoupon() {
             discountRow.style.setProperty('display', 'flex', 'important');
             document.getElementById('discount-amount-text').textContent = `-${data.discount_amount} VND`;
             document.getElementById('final-total-text').textContent = `${data.final_total} VND`;
+            if (document.getElementById('shipping-fee-text')) {
+                document.getElementById('shipping-fee-text').textContent = data.shipping_fee;
+            }
             
             codeInput.value = '';
 
@@ -413,7 +539,10 @@ async function removeCoupon() {
             document.getElementById('coupon-input-group').style.display = 'flex';
             
             document.getElementById('discount-row').style.setProperty('display', 'none', 'important');
-            document.getElementById('final-total-text').textContent = `${data.grand_total} VND`;
+            document.getElementById('final-total-text').textContent = `${data.final_total} VND`;
+            if (document.getElementById('shipping-fee-text')) {
+                document.getElementById('shipping-fee-text').textContent = data.shipping_fee;
+            }
 
             Swal.fire({
                 icon: 'info',

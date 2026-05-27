@@ -496,9 +496,9 @@
 
                         <!-- Actions -->
                         <div class="product-card-actions">
-                            <a href="<?php echo BASE_URL; ?>/Product/addToCart/<?php echo $product->id; ?>" class="btn btn-premium btn-sm flex-grow-1" style="font-size: 0.75rem;">
+                            <button onclick="addToCartAjax(event, '<?php echo $product->id; ?>')" class="btn btn-premium btn-sm flex-grow-1" style="font-size: 0.75rem;">
                                 <i class="fa-solid fa-cart-plus me-1"></i>Thêm giỏ
-                            </a>
+                            </button>
                             <?php if (SessionHelper::isAdmin()): ?>
                                 <a href="<?php echo BASE_URL; ?>/Product/edit/<?php echo $product->id; ?>" class="btn btn-premium-warning btn-sm" style="font-size: 0.75rem; padding: 6px 10px;">
                                     <i class="fa-solid fa-pen"></i>
@@ -559,7 +559,7 @@ function confirmDelete(id, name) {
         cancelButtonText: 'Hủy'
     }).then((result) => {
         if (result.isConfirmed) {
-            window.location.href = '<?php echo BASE_URL; ?>/Product/delete/' + id;
+            window.location.href = '<?php echo BASE_URL; ?>/Product/delete/' + id + '?csrf_token=<?php echo SessionHelper::getCSRFToken(); ?>';
         }
     })
 }

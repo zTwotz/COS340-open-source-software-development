@@ -470,7 +470,7 @@
                     <div class="carousel-glass-content">
                         <h2>iPhone 15 Pro Max</h2>
                         <p>Thiết kế Titanium bền bỉ, chip A17 Pro mạnh mẽ vượt trội và hệ thống camera đỉnh cao mới nhất.</p>
-                        <a href="<?= BASE_URL ?>/Product/addToCart/1" class="btn btn-premium">Thêm vào giỏ hàng</a>
+                        <button onclick="addToCartAjax(event, 1)" class="btn btn-premium">Thêm vào giỏ hàng</button>
                     </div>
                 </div>
             </div>
@@ -490,7 +490,7 @@
                     <div class="carousel-glass-content">
                         <h2>iPad Air M1</h2>
                         <p>Hiệu năng mạnh mẽ ấn tượng từ vi xử lý M1, màn hình Liquid Retina sắc nét hỗ trợ Apple Pencil.</p>
-                        <a href="<?= BASE_URL ?>/Product/addToCart/4" class="btn btn-premium">Thêm vào giỏ hàng</a>
+                        <button onclick="addToCartAjax(event, 4)" class="btn btn-premium">Thêm vào giỏ hàng</button>
                     </div>
                 </div>
             </div>
@@ -607,9 +607,9 @@
                                             <span class="text-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Tạm hết hàng</span>
                                         <?php endif; ?>
                                     </div>
-                                    <a href="<?= BASE_URL ?>/Product/addToCart/<?= $product->id ?>" class="btn-buy-now">
+                                    <button onclick="addToCartAjax(event, '<?= $product->id ?>')" class="btn-buy-now">
                                         <i class="fa-solid fa-cart-shopping"></i> Thêm vào giỏ hàng
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -649,9 +649,9 @@
                                         <span class="text-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Liên hệ</span>
                                     <?php endif; ?>
                                 </div>
-                                <a href="<?= BASE_URL ?>/Product/addToCart/<?= $product->id ?>" class="btn-buy-now">
+                                <button onclick="addToCartAjax(event, '<?= $product->id ?>')" class="btn-buy-now">
                                     <i class="fa-solid fa-cart-shopping"></i> Thêm vào giỏ hàng
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -690,9 +690,9 @@
                                         <span class="text-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Tạm hết hàng</span>
                                     <?php endif; ?>
                                 </div>
-                                <a href="<?= BASE_URL ?>/Product/addToCart/<?= $product->id ?>" class="btn-buy-now">
+                                <button onclick="addToCartAjax(event, '<?= $product->id ?>')" class="btn-buy-now">
                                     <i class="fa-solid fa-cart-shopping"></i> Thêm vào giỏ hàng
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
