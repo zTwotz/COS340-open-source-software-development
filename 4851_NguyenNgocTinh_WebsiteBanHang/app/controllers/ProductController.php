@@ -52,6 +52,7 @@ class ProductController
         $product = $this->productModel->getProductById($id);
 
         if ($product) {
+            $isSold = isset($product->sales_count) && (int)$product->sales_count > 0;
             include 'app/views/product/show.php';
         } else {
             $_SESSION['error_msg'] = "Không tìm thấy sản phẩm.";
@@ -234,12 +235,19 @@ class ProductController
             exit();
         }
 
+        if ($this->productModel->isProductSold($id)) {
+            $_SESSION['error_msg'] = "Không thể xóa sản phẩm này vì đã có trong hóa đơn bán hàng!";
+            header('Location: ' . BASE_URL . '/Product/show/' . $id);
+            exit();
+        }
+
         if ($this->productModel->deleteProduct($id)) {
             $_SESSION['success_msg'] = "Đã xóa sản phẩm thành công!";
+            header('Location: ' . BASE_URL . '/Product');
         } else {
             $_SESSION['error_msg'] = "Đã xảy ra lỗi khi xóa sản phẩm.";
+            header('Location: ' . BASE_URL . '/Product/show/' . $id);
         }
-        header('Location: ' . BASE_URL . '/Product');
         exit();
     }
 

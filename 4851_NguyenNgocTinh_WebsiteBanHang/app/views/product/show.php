@@ -66,6 +66,7 @@
         font-size: 0.9rem;
         font-weight: 500;
         margin-bottom: 1.5rem;
+        align-self: flex-start; /* Prevent stretching in flex layout */
     }
     .stock-info-success {
         background: rgba(48, 209, 88, 0.12);
@@ -168,16 +169,28 @@
                 </div>
 
                 <div class="d-flex flex-wrap gap-3">
-                    <button onclick="addToCartAjax(event, '<?php echo $product->id; ?>')" class="btn btn-premium px-4 py-2">
-                        <i class="fa-solid fa-cart-shopping me-2"></i>Thêm vào giỏ hàng
-                    </button>
+                    <?php if ($stock <= 0): ?>
+                        <button class="btn btn-premium px-4 py-2" disabled style="opacity: 0.6; cursor: not-allowed;" title="Sản phẩm đã hết hàng">
+                            <i class="fa-solid fa-circle-xmark me-2"></i>Hết hàng
+                        </button>
+                    <?php else: ?>
+                        <button onclick="addToCartAjax(event, '<?php echo $product->id; ?>')" class="btn btn-premium px-4 py-2">
+                            <i class="fa-solid fa-cart-shopping me-2"></i>Thêm vào giỏ hàng
+                        </button>
+                    <?php endif; ?>
                     <?php if (SessionHelper::isAdmin()): ?>
                         <a href="<?php echo BASE_URL; ?>/Product/edit/<?php echo $product->id; ?>" class="btn btn-premium-warning px-4 py-2">
                             <i class="fa-solid fa-pen-to-square me-2"></i>Chỉnh sửa
                         </a>
-                        <button onclick="confirmDelete('<?php echo $product->id; ?>', '<?php echo htmlspecialchars($product->name, ENT_QUOTES, 'UTF-8'); ?>')" class="btn btn-premium-danger px-4 py-2">
-                            <i class="fa-solid fa-trash-can me-2"></i>Xóa
-                        </button>
+                        <?php if ($isSold): ?>
+                            <button class="btn btn-premium-danger px-4 py-2" disabled style="opacity: 0.65; cursor: not-allowed;" title="Sản phẩm này đã được bán ra ngoài, không thể xóa!">
+                                <i class="fa-solid fa-trash-can me-2"></i>Xóa (Đã bán)
+                            </button>
+                        <?php else: ?>
+                            <button onclick="confirmDelete('<?php echo $product->id; ?>', '<?php echo htmlspecialchars($product->name, ENT_QUOTES, 'UTF-8'); ?>')" class="btn btn-premium-danger px-4 py-2">
+                                <i class="fa-solid fa-trash-can me-2"></i>Xóa
+                            </button>
+                        <?php endif; ?>
                     <?php endif; ?>
                     <a href="<?php echo BASE_URL; ?>/Product" class="btn btn-glass-secondary px-4 py-2">
                         <i class="fa-solid fa-arrow-left me-2"></i>Quay lại

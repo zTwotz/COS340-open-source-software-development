@@ -496,16 +496,28 @@
 
                         <!-- Actions -->
                         <div class="product-card-actions">
-                            <button onclick="addToCartAjax(event, '<?php echo $product->id; ?>')" class="btn btn-premium btn-sm flex-grow-1" style="font-size: 0.75rem;">
-                                <i class="fa-solid fa-cart-plus me-1"></i>Thêm giỏ
-                            </button>
+                            <?php if ($stock <= 0): ?>
+                                <button class="btn btn-premium btn-sm flex-grow-1" disabled style="font-size: 0.75rem; opacity: 0.6; cursor: not-allowed;" title="Hết hàng">
+                                    <i class="fa-solid fa-ban me-1"></i>Hết hàng
+                                </button>
+                            <?php else: ?>
+                                <button onclick="addToCartAjax(event, '<?php echo $product->id; ?>')" class="btn btn-premium btn-sm flex-grow-1" style="font-size: 0.75rem;">
+                                    <i class="fa-solid fa-cart-plus me-1"></i>Thêm giỏ
+                                </button>
+                            <?php endif; ?>
                             <?php if (SessionHelper::isAdmin()): ?>
                                 <a href="<?php echo BASE_URL; ?>/Product/edit/<?php echo $product->id; ?>" class="btn btn-premium-warning btn-sm" style="font-size: 0.75rem; padding: 6px 10px;">
                                     <i class="fa-solid fa-pen"></i>
                                 </a>
-                                <button onclick="confirmDelete('<?php echo $product->id; ?>', '<?php echo htmlspecialchars($product->name, ENT_QUOTES, 'UTF-8'); ?>')" class="btn btn-premium-danger btn-sm" style="font-size: 0.75rem; padding: 6px 10px;">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
+                                <?php if (isset($product->sales_count) && (int)$product->sales_count > 0): ?>
+                                    <button class="btn btn-premium-danger btn-sm" disabled style="font-size: 0.75rem; padding: 6px 10px; opacity: 0.65; cursor: not-allowed;" title="Sản phẩm này đã được bán ra ngoài, không thể xóa!">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                <?php else: ?>
+                                    <button onclick="confirmDelete('<?php echo $product->id; ?>', '<?php echo htmlspecialchars($product->name, ENT_QUOTES, 'UTF-8'); ?>')" class="btn btn-premium-danger btn-sm" style="font-size: 0.75rem; padding: 6px 10px;">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     </div>

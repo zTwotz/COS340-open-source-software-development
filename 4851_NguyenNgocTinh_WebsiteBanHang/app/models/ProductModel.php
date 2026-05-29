@@ -115,7 +115,8 @@ class ProductModel
 
     public function getProductById($id)
     {
-        $query = "SELECT p.id, p.name, p.description, p.price, p.sale_price, p.stock, p.image, p.category_id, p.is_featured, p.brand, p.slug, c.name as category_name
+        $query = "SELECT p.id, p.name, p.description, p.price, p.sale_price, p.stock, p.image, p.category_id, p.is_featured, p.brand, p.slug, c.name as category_name,
+                         (SELECT COUNT(*) FROM order_details od WHERE od.product_id = p.id) as sales_count
                   FROM " . $this->table_name . " p
                   LEFT JOIN category c ON p.category_id = c.id
                   WHERE p.id = :id";
@@ -221,8 +222,21 @@ class ProductModel
         return false;
     }
 
+    public function isProductSold($id)
+    {
+        $query = "SELECT COUNT(*) as total FROM order_details WHERE product_id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_OBJ);
+        return (int)$row->total > 0;
+    }
+
     public function deleteProduct($id)
     {
+        if ($this->isProductSold($id)) {
+            return false;
+        }
         // First, get the product to find the image file path to delete it
         $product = $this->getProductById($id);
         if ($product && !empty($product->image) && file_exists($product->image)) {
@@ -284,7 +298,8 @@ class ProductModel
     {
         $offset = ($page - 1) * $limit;
         
-        $sql = "SELECT p.id, p.name, p.description, p.price, p.sale_price, p.stock, p.image, p.category_id, p.is_featured, p.brand, p.slug, c.name as category_name
+        $sql = "SELECT p.id, p.name, p.description, p.price, p.sale_price, p.stock, p.image, p.category_id, p.is_featured, p.brand, p.slug, c.name as category_name,
+                       (SELECT COUNT(*) FROM order_details od WHERE od.product_id = p.id) as sales_count
                 FROM " . $this->table_name . " p
                 LEFT JOIN category c ON p.category_id = c.id
                 WHERE 1=1";

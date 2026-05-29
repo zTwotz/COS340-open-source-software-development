@@ -644,9 +644,9 @@
                                 </div>
                                 <div class="stock-status">
                                     <?php if ($product->stock > 0): ?>
-                                        <span class="text-success"><i class="fa-solid fa-circle-check me-1"></i> Sẵn hàng</span>
+                                        <span class="text-success"><i class="fa-solid fa-circle-check me-1"></i> Còn <?= $product->stock ?> sản phẩm</span>
                                     <?php else: ?>
-                                        <span class="text-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Liên hệ</span>
+                                        <span class="text-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Tạm hết hàng</span>
                                     <?php endif; ?>
                                 </div>
                                 <button onclick="addToCartAjax(event, '<?= $product->id ?>')" class="btn-buy-now">

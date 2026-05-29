@@ -158,6 +158,12 @@ class ProductApiController
             return;
         }
 
+        if ($this->productModel->isProductSold($id)) {
+            http_response_code(400);
+            echo json_encode(['message' => 'Cannot delete product: product has already been sold (referenced in orders)']);
+            return;
+        }
+
         $result = $this->productModel->deleteProduct($id);
 
         if ($result) {
