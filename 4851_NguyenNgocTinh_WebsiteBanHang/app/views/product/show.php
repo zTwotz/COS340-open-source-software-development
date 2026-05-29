@@ -182,15 +182,9 @@
                         <a href="<?php echo BASE_URL; ?>/Product/edit/<?php echo $product->id; ?>" class="btn btn-premium-warning px-4 py-2">
                             <i class="fa-solid fa-pen-to-square me-2"></i>Chỉnh sửa
                         </a>
-                        <?php if ($isSold): ?>
-                            <button class="btn btn-premium-danger px-4 py-2" disabled style="opacity: 0.65; cursor: not-allowed;" title="Sản phẩm này đã được bán ra ngoài, không thể xóa!">
-                                <i class="fa-solid fa-trash-can me-2"></i>Xóa (Đã bán)
-                            </button>
-                        <?php else: ?>
-                            <button onclick="confirmDelete('<?php echo $product->id; ?>', '<?php echo htmlspecialchars($product->name, ENT_QUOTES, 'UTF-8'); ?>')" class="btn btn-premium-danger px-4 py-2">
-                                <i class="fa-solid fa-trash-can me-2"></i>Xóa
-                            </button>
-                        <?php endif; ?>
+                        <button onclick="confirmDelete('<?php echo $product->id; ?>', '<?php echo htmlspecialchars($product->name, ENT_QUOTES, 'UTF-8'); ?>')" class="btn btn-premium-danger px-4 py-2">
+                            <i class="fa-solid fa-trash-can me-2"></i>Xóa
+                        </button>
                     <?php endif; ?>
                     <a href="<?php echo BASE_URL; ?>/Product" class="btn btn-glass-secondary px-4 py-2">
                         <i class="fa-solid fa-arrow-left me-2"></i>Quay lại
@@ -217,7 +211,7 @@ function confirmDelete(id, name) {
         cancelButtonText: 'Hủy bỏ'
     }).then((result) => {
         if (result.isConfirmed) {
-            window.location.href = '<?php echo BASE_URL; ?>/Product/delete/' + id;
+            window.location.href = '<?php echo BASE_URL; ?>/Product/delete/' + id + '?csrf_token=<?php echo SessionHelper::getCSRFToken(); ?>';
         }
     })
 }

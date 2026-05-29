@@ -509,15 +509,9 @@
                                 <a href="<?php echo BASE_URL; ?>/Product/edit/<?php echo $product->id; ?>" class="btn btn-premium-warning btn-sm" style="font-size: 0.75rem; padding: 6px 10px;">
                                     <i class="fa-solid fa-pen"></i>
                                 </a>
-                                <?php if (isset($product->sales_count) && (int)$product->sales_count > 0): ?>
-                                    <button class="btn btn-premium-danger btn-sm" disabled style="font-size: 0.75rem; padding: 6px 10px; opacity: 0.65; cursor: not-allowed;" title="Sản phẩm này đã được bán ra ngoài, không thể xóa!">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                <?php else: ?>
-                                    <button onclick="confirmDelete('<?php echo $product->id; ?>', '<?php echo htmlspecialchars($product->name, ENT_QUOTES, 'UTF-8'); ?>')" class="btn btn-premium-danger btn-sm" style="font-size: 0.75rem; padding: 6px 10px;">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                <?php endif; ?>
+                                <button onclick="confirmDelete('<?php echo $product->id; ?>', '<?php echo htmlspecialchars($product->name, ENT_QUOTES, 'UTF-8'); ?>')" class="btn btn-premium-danger btn-sm" style="font-size: 0.75rem; padding: 6px 10px;">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
                             <?php endif; ?>
                         </div>
                     </div>

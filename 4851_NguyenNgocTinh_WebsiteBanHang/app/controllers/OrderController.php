@@ -97,9 +97,27 @@ class OrderController
                 exit();
             }
 
+            // Get current order to validate forward-only transition
+            $currentOrder = $this->orderModel->getOrderById($orderId);
+            if (!$currentOrder) {
+                $_SESSION['error_msg'] = "Không tìm thấy đơn hàng.";
+                header('Location: ' . BASE_URL . '/Order');
+                exit();
+            }
+
+            $currentIdx = array_search($currentOrder->status, $validStatuses);
+            $newIdx = array_search($status, $validStatuses);
+
+            // Only allow advancing to next step, never going back
+            if ($newIdx !== $currentIdx + 1) {
+                $_SESSION['error_msg'] = "Chỉ được phép chuyển sang trạng thái tiếp theo, không thể quay về trạng thái trước!";
+                header('Location: ' . BASE_URL . '/Order/show/' . $orderId);
+                exit();
+            }
+
             $result = $this->orderModel->updateOrderStatus($orderId, $status);
             if ($result) {
-                $_SESSION['success_msg'] = "Cập nhật trạng thái đơn hàng thành công!";
+                $_SESSION['success_msg'] = "Đã chuyển trạng thái đơn hàng sang: " . $status;
             } else {
                 $_SESSION['error_msg'] = "Có lỗi xảy ra khi cập nhật trạng thái.";
             }

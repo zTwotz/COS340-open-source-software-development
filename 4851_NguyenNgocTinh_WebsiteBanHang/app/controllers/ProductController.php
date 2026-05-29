@@ -236,8 +236,12 @@ class ProductController
         }
 
         if ($this->productModel->isProductSold($id)) {
-            $_SESSION['error_msg'] = "Không thể xóa sản phẩm này vì đã có trong hóa đơn bán hàng!";
-            header('Location: ' . BASE_URL . '/Product/show/' . $id);
+            $_SESSION['error_msg'] = "Không thể xóa sản phẩm này vì đã bán rồi!";
+            $redirectUrl = $_SERVER['HTTP_REFERER'] ?? (BASE_URL . '/Product');
+            if (strpos($redirectUrl, '/Product/delete') !== false) {
+                $redirectUrl = BASE_URL . '/Product';
+            }
+            header('Location: ' . $redirectUrl);
             exit();
         }
 
@@ -246,7 +250,11 @@ class ProductController
             header('Location: ' . BASE_URL . '/Product');
         } else {
             $_SESSION['error_msg'] = "Đã xảy ra lỗi khi xóa sản phẩm.";
-            header('Location: ' . BASE_URL . '/Product/show/' . $id);
+            $redirectUrl = $_SERVER['HTTP_REFERER'] ?? (BASE_URL . '/Product/show/' . $id);
+            if (strpos($redirectUrl, '/Product/delete') !== false) {
+                $redirectUrl = BASE_URL . '/Product';
+            }
+            header('Location: ' . $redirectUrl);
         }
         exit();
     }

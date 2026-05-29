@@ -29,16 +29,20 @@ if ($currentStatusIndex === false) {
         
         <?php if (SessionHelper::isAdmin()): ?>
             <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                <form action="<?php echo BASE_URL; ?>/Order/updateStatus" method="POST" class="d-inline-flex align-items-center gap-2">
-                    <input type="hidden" name="id" value="<?php echo $order->id; ?>">
-                    <input type="hidden" name="csrf_token" value="<?php echo SessionHelper::getCSRFToken(); ?>">
-                    <label for="statusSelect" class="text-muted text-nowrap mb-0" style="font-size: 14px;">Cập nhật trạng thái:</label>
-                    <select id="statusSelect" name="status" class="form-select form-select-sm status-dropdown" onchange="this.form.submit()">
-                        <?php foreach ($statuses as $st): ?>
-                            <option value="<?php echo $st; ?>" <?php echo $order->status === $st ? 'selected' : ''; ?>><?php echo $st; ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </form>
+                <?php if ($currentStatusIndex < count($statuses) - 1): ?>
+                    <form action="<?php echo BASE_URL; ?>/Order/updateStatus" method="POST" class="d-inline">
+                        <input type="hidden" name="id" value="<?php echo $order->id; ?>">
+                        <input type="hidden" name="csrf_token" value="<?php echo SessionHelper::getCSRFToken(); ?>">
+                        <input type="hidden" name="status" value="<?php echo htmlspecialchars($statuses[$currentStatusIndex + 1], ENT_QUOTES, 'UTF-8'); ?>">
+                        <button type="submit" class="btn btn-premium px-4 py-2">
+                            <i class="fa-solid fa-arrow-right me-2"></i>Chuyển sang: <strong><?php echo htmlspecialchars($statuses[$currentStatusIndex + 1], ENT_QUOTES, 'UTF-8'); ?></strong>
+                        </button>
+                    </form>
+                <?php else: ?>
+                    <span class="badge bg-success px-3 py-2" style="font-size: 14px; border-radius: 8px;">
+                        <i class="fa-solid fa-check-double me-2"></i>Hoàn tất giao hàng
+                    </span>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
     </div>
@@ -191,20 +195,15 @@ if ($currentStatusIndex === false) {
 </div>
 
 <style>
-    /* Status Dropdown Styling */
-    .status-dropdown {
-        background-color: var(--canvas-parchment);
-        color: var(--text-main);
-        border: 1px solid var(--glass-border);
-        border-radius: 8px;
-        font-weight: 500;
-        padding: 5px 12px;
-        width: auto;
-        display: inline-block;
-    }
-    .status-dropdown:focus {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+    /* Status pill badges */
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px;
+        border-radius: 980px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
     }
     
     /* Horizontal Progress Timeline CSS */

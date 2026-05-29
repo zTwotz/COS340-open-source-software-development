@@ -56,16 +56,33 @@
                                 </span>
                             </td>
                             <td>
-                                <form action="<?php echo BASE_URL; ?>/Order/updateStatus" method="POST" class="d-inline">
-                                    <input type="hidden" name="id" value="<?php echo $order->id; ?>">
-                                    <input type="hidden" name="csrf_token" value="<?php echo SessionHelper::getCSRFToken(); ?>">
-                                    <select name="status" class="form-select form-select-sm status-select" onchange="this.form.submit()" style="border-radius: 8px; font-size: 13px; font-weight: 500; padding: 4px 10px; width: auto; display: inline-block;">
-                                        <option value="Chờ xác nhận" <?php echo $order->status === 'Chờ xác nhận' ? 'selected' : ''; ?>>Chờ xác nhận</option>
-                                        <option value="Đang chuẩn bị hàng" <?php echo $order->status === 'Đang chuẩn bị hàng' ? 'selected' : ''; ?>>Đang chuẩn bị hàng</option>
-                                        <option value="Đang giao hàng" <?php echo $order->status === 'Đang giao hàng' ? 'selected' : ''; ?>>Đang giao hàng</option>
-                                        <option value="Đã giao hàng" <?php echo $order->status === 'Đã giao hàng' ? 'selected' : ''; ?>>Đã giao hàng</option>
-                                    </select>
-                                </form>
+                                <?php
+                                $statuses = ['Chờ xác nhận', 'Đang chuẩn bị hàng', 'Đang giao hàng', 'Đã giao hàng'];
+                                $statusIcons = ['fa-clock', 'fa-box-open', 'fa-truck', 'fa-circle-check'];
+                                $statusColors = ['warning', 'info', 'primary', 'success'];
+                                $currentIdx = array_search($order->status, $statuses);
+                                if ($currentIdx === false) $currentIdx = 0;
+                                $colorClass = $statusColors[$currentIdx] ?? 'secondary';
+                                $icon = $statusIcons[$currentIdx] ?? 'fa-circle';
+                                ?>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="status-pill status-<?php echo $colorClass; ?>">
+                                        <i class="fa-solid <?php echo $icon; ?> me-1"></i>
+                                        <?php echo htmlspecialchars($order->status, ENT_QUOTES, 'UTF-8'); ?>
+                                    </span>
+                                    <?php if ($currentIdx < count($statuses) - 1): ?>
+                                        <form action="<?php echo BASE_URL; ?>/Order/updateStatus" method="POST" class="d-inline">
+                                            <input type="hidden" name="id" value="<?php echo $order->id; ?>">
+                                            <input type="hidden" name="csrf_token" value="<?php echo SessionHelper::getCSRFToken(); ?>">
+                                            <input type="hidden" name="status" value="<?php echo htmlspecialchars($statuses[$currentIdx + 1], ENT_QUOTES, 'UTF-8'); ?>">
+                                            <button type="submit" class="btn-next-status" title="Chuyển sang: <?php echo htmlspecialchars($statuses[$currentIdx + 1], ENT_QUOTES, 'UTF-8'); ?>">
+                                                <i class="fa-solid fa-arrow-right me-1"></i><?php echo htmlspecialchars($statuses[$currentIdx + 1], ENT_QUOTES, 'UTF-8'); ?>
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <span class="text-success" style="font-size: 12px;"><i class="fa-solid fa-check-double me-1"></i>Hoàn tất</span>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                             <td class="text-center">
                                 <a href="<?php echo BASE_URL; ?>/Order/show/<?php echo $order->id; ?>" class="btn btn-sm btn-glass-secondary py-1 px-3" title="Xem chi tiết">
@@ -81,19 +98,41 @@
 </div>
 
 <style>
-    .status-select {
-        background-color: var(--canvas-parchment);
-        color: var(--text-main);
-        border: 1px solid var(--glass-border);
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px;
+        border-radius: 980px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
     }
-    .status-select:focus {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+    .status-warning  { background: rgba(255,159,10,0.12); color: #ff9f0a; border: 1px solid rgba(255,159,10,0.3); }
+    .status-info     { background: rgba(10,132,255,0.12); color: #0a84ff; border: 1px solid rgba(10,132,255,0.3); }
+    .status-primary  { background: rgba(0,113,227,0.12);  color: #0071e3; border: 1px solid rgba(0,113,227,0.3); }
+    .status-success  { background: rgba(48,209,88,0.12);  color: #30d158; border: 1px solid rgba(48,209,88,0.3); }
+    [data-theme="light"] .status-warning  { background: rgba(255,149,0,0.08);  color: #b86e00; }
+    [data-theme="light"] .status-info     { background: rgba(0,122,255,0.08);  color: #007aff; }
+    [data-theme="light"] .status-primary  { background: rgba(0,102,204,0.08);  color: #0066cc; }
+    [data-theme="light"] .status-success  { background: rgba(52,199,89,0.08);  color: #1a8a3a; }
+
+    .btn-next-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 12px;
+        border-radius: 980px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--accent-color, #0071e3);
+        background: transparent;
+        color: var(--accent-color, #0071e3);
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+        white-space: nowrap;
     }
-    /* Dynamic border left or outline based on status value */
-    select[name="status"] option {
-        background-color: var(--surface-pearl);
-        color: var(--text-main);
+    .btn-next-status:hover {
+        background: var(--accent-color, #0071e3);
+        color: #fff;
     }
 </style>
 
